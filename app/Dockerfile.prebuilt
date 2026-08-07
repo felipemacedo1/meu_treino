@@ -1,0 +1,8 @@
+# Usa o bundle web já compilado localmente (app/build/web).
+# Muito mais rápido que baixar a imagem do Flutter: usado por scripts/start.sh
+# quando o Flutter SDK está instalado na máquina.
+FROM nginx:1.27-alpine
+ARG API_BASE_URL=/api
+COPY build/web /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80

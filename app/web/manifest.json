@@ -1,0 +1,37 @@
+{
+    "name": "Meu Treino",
+    "short_name": "Meu Treino",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#101014",
+    "theme_color": "#6C4DF6",
+    "description": "Fichas de treino, execução com cronômetro de descanso, histórico e evolução de carga.",
+    "orientation": "portrait-primary",
+    "lang": "pt-BR",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
