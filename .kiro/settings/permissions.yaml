@@ -1,0 +1,14 @@
+# Kiro CLI v3 permissions — ZERO-ASK policy
+# All capabilities allowed. No prompts. Full autonomy.
+# deny > ask > allow — no ask rules means no interruptions.
+
+rules:
+  # Baseline: allow everything
+  - { capability: builtin, effect: allow }
+  - { capability: shell, effect: allow }
+  - { capability: mcp, effect: allow }
+  - { capability: web_fetch, effect: allow }
+  - { capability: web_search, effect: allow }
+  - { capability: subagent, effect: allow }
+  - { capability: fs_read, effect: allow }
+  - { capability: fs_write, effect: allow, match: ["./**", "~/**"] }
