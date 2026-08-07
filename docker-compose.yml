@@ -1,0 +1,60 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: meu-treino-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-meu_treino}
+      POSTGRES_USER: ${POSTGRES_USER:-meutreino}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-meutreino}
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-meutreino} -d ${POSTGRES_DB:-meu_treino}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: ./backend
+    container_name: meu-treino-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-meu_treino}
+      DB_USER: ${POSTGRES_USER:-meutreino}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-meutreino}
+      DB_HOST: db
+      DB_PORT_INTERNAL: 5432
+      JWT_SECRET: ${JWT_SECRET:-troque-esta-chave-em-producao-meu-treino-2026-super-secreta-1234567890}
+      JWT_EXPIRATION_DAYS: ${JWT_EXPIRATION_DAYS:-60}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
+      WGER_BASE_URL: ${WGER_BASE_URL:-https://wger.de/api/v2}
+      WGER_SYNC_ON_STARTUP: ${WGER_SYNC_ON_STARTUP:-true}
+      WGER_MAX_EXERCISES: ${WGER_MAX_EXERCISES:-2000}
+      TZ: America/Sao_Paulo
+    ports:
+      - "${API_PORT:-8080}:8080"
+
+  web:
+    build:
+      context: ./app
+      dockerfile: ${WEB_DOCKERFILE:-Dockerfile}
+      args:
+        API_BASE_URL: ${WEB_API_BASE_URL:-/api}
+    container_name: meu-treino-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-8081}:80"
+
+volumes:
+  pgdata:
