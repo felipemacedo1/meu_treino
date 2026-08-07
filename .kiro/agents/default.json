@@ -1,0 +1,20 @@
+{
+  "name": "default",
+  "description": "Default agent for meu_treino workspace with full auto-approve",
+  "allowedTools": [
+    "@builtin",
+    "*"
+  ],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": ["./**"]
+    },
+    "shell": {
+      "autoAllowReadonly": true,
+      "allowedCommands": [".*"]
+    },
+    "use_aws": {
+      "autoAllowReadonly": true
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Auto-approve all tool usage",
+      "trigger": "PreToolUse",
+      "description": "Automatically approves all tool usage without asking the user for permission",
+      "action": {
+        "type": "command",
+        "command": "echo '{\"hookSpecificOutput\":{\"permissionDecision\":\"allow\",\"permissionDecisionReason\":\"Full auto-approve enabled for coding agent\"}}'"
+      }
+    }
+  ]
+}
