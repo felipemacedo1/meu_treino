@@ -11,17 +11,39 @@ class Env {
     defaultValue: 'http://localhost:8080/api',
   );
 
+  /// Base efetiva da API. No APK o usuario pode apontar para o proprio
+  /// servidor, entao o valor de compilacao e apenas o padrao.
+  static String activeBaseUrl = apiBaseUrl;
+
   /// O backend devolve caminhos relativos como `/api/media/<hash>`.
   /// Aqui convertemos para a URL absoluta correta em qualquer ambiente.
   static String? resolveMedia(String? path) {
     if (path == null || path.isEmpty) return null;
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    final base = activeBaseUrl;
     if (path.startsWith('/api/')) {
-      return '$apiBaseUrl${path.substring(4)}';
+      return '$base${path.substring(4)}';
     }
     if (path.startsWith('/')) {
-      return '$apiBaseUrl$path';
+      return '$base$path';
     }
-    return '$apiBaseUrl/$path';
+    return '$base/$path';
+  }
+
+  /// Normaliza o que o usuario digitar: aceita "192.168.0.8:8080",
+  /// "http://host" ou a URL completa terminando em /api.
+  static String normalizeServerUrl(String input) {
+    var value = input.trim();
+    if (value.isEmpty) return apiBaseUrl;
+    if (!value.startsWith('http://') && !value.startsWith('https://')) {
+      value = 'http://$value';
+    }
+    while (value.endsWith('/')) {
+      value = value.substring(0, value.length - 1);
+    }
+    if (!value.endsWith('/api')) {
+      value = '$value/api';
+    }
+    return value;
   }
 }

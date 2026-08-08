@@ -6,6 +6,7 @@ import '../../core/router.dart';
 import '../../providers/auth_controller.dart';
 import '../../widgets/common.dart';
 import 'auth_scaffold.dart';
+import 'server_field.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -92,13 +93,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
         ),
       ],
-      footer: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      footer: Column(
         children: [
-          const Text('Não tem conta?'),
-          TextButton(
-            onPressed: () => context.push(AppRoutes.register),
-            child: const Text('Criar agora'),
+          const ServerSelector(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Não tem conta?'),
+              TextButton(
+                onPressed: () => context.push(AppRoutes.register),
+                child: const Text('Criar agora'),
+              ),
+            ],
           ),
         ],
       ),

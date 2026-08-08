@@ -20,12 +20,16 @@ typedef TokenReader = String? Function();
 typedef UnauthorizedHandler = void Function();
 
 class ApiClient {
-  ApiClient({required TokenReader tokenReader, UnauthorizedHandler? onUnauthorized})
-      : _tokenReader = tokenReader,
-        _onUnauthorized = onUnauthorized {
+  ApiClient({
+    required TokenReader tokenReader,
+    UnauthorizedHandler? onUnauthorized,
+    String? baseUrl,
+  })  : _tokenReader = tokenReader,
+        _onUnauthorized = onUnauthorized,
+        baseUrl = baseUrl ?? Env.apiBaseUrl {
     _dio = Dio(
       BaseOptions(
-        baseUrl: Env.apiBaseUrl,
+        baseUrl: this.baseUrl,
         connectTimeout: const Duration(seconds: 20),
         receiveTimeout: const Duration(seconds: 60),
         contentType: 'application/json',
@@ -54,6 +58,10 @@ class ApiClient {
 
   final TokenReader _tokenReader;
   final UnauthorizedHandler? _onUnauthorized;
+
+  /// Endereco efetivo da API em uso.
+  final String baseUrl;
+
   late final Dio _dio;
 
   Future<dynamic> get(String path, {Map<String, dynamic>? query}) =>

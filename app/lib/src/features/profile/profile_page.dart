@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/env.dart';
 import '../../core/formatters.dart';
 import '../../core/router.dart';
 import '../../models/user.dart';
@@ -194,7 +193,7 @@ class ProfilePage extends ConsumerWidget {
               label: const Text('Sair da conta'),
             ),
             const SizedBox(height: 20),
-            Center(child: LabelText('Meu Treino · ${Env.apiBaseUrl}', size: 9)),
+            Center(child: LabelText('Meu Treino · ${ref.watch(serverUrlProvider)}', size: 9)),
           ],
         ),
       ),

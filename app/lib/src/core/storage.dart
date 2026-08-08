@@ -10,6 +10,7 @@ class Storage {
 
   static const _tokenKey = 'auth_token';
   static const _themeKey = 'theme_id';
+  static const _serverKey = 'server_url';
 
   final SharedPreferences _prefs;
 
@@ -25,4 +26,12 @@ class Storage {
   String? get themeId => _prefs.getString(_themeKey);
 
   Future<void> saveThemeId(String id) => _prefs.setString(_themeKey, id);
+
+  /// Endereco da API. Null usa o valor de compilacao (Env.apiBaseUrl).
+  /// Necessario no APK: o servidor roda na maquina do usuario, e o IP muda.
+  String? get serverUrl => _prefs.getString(_serverKey);
+
+  Future<void> saveServerUrl(String url) => _prefs.setString(_serverKey, url);
+
+  Future<void> clearServerUrl() => _prefs.remove(_serverKey);
 }
