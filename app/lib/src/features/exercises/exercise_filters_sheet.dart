@@ -119,14 +119,23 @@ class _ExerciseFiltersSheetState extends ConsumerState<ExerciseFiltersSheet> {
                           )
                           .toList(),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 20),
+                    const SectionTitle('Mídia de execução'),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       value: _filter.onlyWithImage,
                       onChanged: (value) =>
                           setState(() => _filter = _filter.copyWith(onlyWithImage: value)),
                       title: const Text('Somente com imagem'),
-                      subtitle: const Text('Mostra apenas exercícios ilustrados'),
+                      subtitle: const Text('264 exercícios ilustrados'),
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: _filter.onlyWithVideo,
+                      onChanged: (value) =>
+                          setState(() => _filter = _filter.copyWith(onlyWithVideo: value)),
+                      title: const Text('Somente com vídeo'),
+                      subtitle: const Text('46 exercícios com vídeo de execução'),
                     ),
                   ],
                 ),

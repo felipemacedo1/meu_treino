@@ -11,6 +11,7 @@ class Storage {
   static const _tokenKey = 'auth_token';
   static const _themeKey = 'theme_id';
   static const _serverKey = 'server_url';
+  static const _userKey = 'auth_user';
 
   final SharedPreferences _prefs;
 
@@ -20,7 +21,16 @@ class Storage {
 
   Future<void> saveToken(String token) => _prefs.setString(_tokenKey, token);
 
-  Future<void> clearToken() => _prefs.remove(_tokenKey);
+  Future<void> clearToken() async {
+    await _prefs.remove(_tokenKey);
+    await _prefs.remove(_userKey);
+  }
+
+  /// Dados basicos do usuario logado, em JSON. Permite abrir o app sem rede
+  /// sem perder a sessao: o token continua valido por 60 dias.
+  String? get userJson => _prefs.getString(_userKey);
+
+  Future<void> saveUserJson(String json) => _prefs.setString(_userKey, json);
 
   /// Identificador do tema (ver AppThemes). Null na primeira execucao.
   String? get themeId => _prefs.getString(_themeKey);

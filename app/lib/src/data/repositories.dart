@@ -74,6 +74,7 @@ class ExerciseRepository {
     int? equipmentId,
     int? categoryId,
     bool onlyWithImage = false,
+    bool onlyWithVideo = false,
     int page = 0,
     int size = 20,
   }) async {
@@ -83,6 +84,7 @@ class ExerciseRepository {
       'equipmentId': equipmentId,
       'categoryId': categoryId,
       'onlyWithImage': onlyWithImage,
+      'onlyWithVideo': onlyWithVideo,
       'page': page,
       'size': size,
     });

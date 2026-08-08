@@ -33,6 +33,7 @@ public class ExerciseService {
                                                 Integer muscleId,
                                                 Integer equipmentId,
                                                 boolean onlyWithImage,
+                                                boolean onlyWithVideo,
                                                 int page,
                                                 int size) {
         List<Specification<Exercise>> specs = new ArrayList<>();
@@ -41,6 +42,7 @@ public class ExerciseService {
         specs.add(ExerciseSpecs.muscle(muscleId));
         specs.add(ExerciseSpecs.equipment(equipmentId));
         specs.add(ExerciseSpecs.onlyWithImage(onlyWithImage));
+        specs.add(ExerciseSpecs.onlyWithVideo(onlyWithVideo));
 
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100),
                 Sort.by(Sort.Order.desc("quality"), Sort.Order.asc("name")));

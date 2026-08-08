@@ -163,6 +163,7 @@ class ExerciseFilter {
     this.equipmentId,
     this.categoryId,
     this.onlyWithImage = false,
+    this.onlyWithVideo = false,
   });
 
   final String search;
@@ -170,15 +171,21 @@ class ExerciseFilter {
   final int? equipmentId;
   final int? categoryId;
   final bool onlyWithImage;
+  final bool onlyWithVideo;
 
   bool get hasFilters =>
-      muscleId != null || equipmentId != null || categoryId != null || onlyWithImage;
+      muscleId != null ||
+      equipmentId != null ||
+      categoryId != null ||
+      onlyWithImage ||
+      onlyWithVideo;
 
   int get activeCount =>
       (muscleId != null ? 1 : 0) +
       (equipmentId != null ? 1 : 0) +
       (categoryId != null ? 1 : 0) +
-      (onlyWithImage ? 1 : 0);
+      (onlyWithImage ? 1 : 0) +
+      (onlyWithVideo ? 1 : 0);
 
   ExerciseFilter copyWith({
     String? search,
@@ -186,6 +193,7 @@ class ExerciseFilter {
     int? equipmentId,
     int? categoryId,
     bool? onlyWithImage,
+    bool? onlyWithVideo,
     bool clearMuscle = false,
     bool clearEquipment = false,
     bool clearCategory = false,
@@ -196,6 +204,7 @@ class ExerciseFilter {
       equipmentId: clearEquipment ? null : (equipmentId ?? this.equipmentId),
       categoryId: clearCategory ? null : (categoryId ?? this.categoryId),
       onlyWithImage: onlyWithImage ?? this.onlyWithImage,
+      onlyWithVideo: onlyWithVideo ?? this.onlyWithVideo,
     );
   }
 }

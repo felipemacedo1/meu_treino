@@ -55,16 +55,22 @@ public final class ExerciseSpecs {
     }
 
     public static Specification<Exercise> onlyWithImage(boolean onlyWithImage) {
-        if (!onlyWithImage) {
-            return null;
-        }
+        return onlyWithImage ? hasMedia("images") : null;
+    }
+
+    public static Specification<Exercise> onlyWithVideo(boolean onlyWithVideo) {
+        return onlyWithVideo ? hasMedia("videos") : null;
+    }
+
+    /** EXISTS na coleção de mídia informada ("images" ou "videos"). */
+    private static Specification<Exercise> hasMedia(String collection) {
         return (root, query, cb) -> {
             if (query == null) {
                 return cb.conjunction();
             }
             Subquery<Integer> sub = query.subquery(Integer.class);
             var subRoot = sub.from(Exercise.class);
-            subRoot.joinSet("images", JoinType.INNER);
+            subRoot.joinSet(collection, JoinType.INNER);
             sub.select(cb.literal(1)).where(cb.equal(subRoot.get("id"), root.get("id")));
             return cb.exists(sub);
         };

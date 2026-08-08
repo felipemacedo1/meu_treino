@@ -37,9 +37,11 @@ public class ExerciseController {
             @RequestParam(required = false) Integer muscleId,
             @RequestParam(required = false) Integer equipmentId,
             @RequestParam(defaultValue = "false") boolean onlyWithImage,
+            @RequestParam(defaultValue = "false") boolean onlyWithVideo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return service.search(search, categoryId, muscleId, equipmentId, onlyWithImage, page, size);
+        return service.search(
+                search, categoryId, muscleId, equipmentId, onlyWithImage, onlyWithVideo, page, size);
     }
 
     @GetMapping("/catalog")

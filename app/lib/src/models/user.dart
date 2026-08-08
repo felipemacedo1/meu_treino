@@ -15,6 +15,13 @@ class AppUser {
         createdAt: asDate(json['createdAt']),
       );
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'email': email,
+        'createdAt': createdAt?.toIso8601String(),
+      };
+
   String get initials {
     final parts = name.trim().split(RegExp(r'\s+'));
     if (parts.isEmpty || parts.first.isEmpty) return '?';

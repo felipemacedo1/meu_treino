@@ -340,6 +340,7 @@ class ExerciseSearchController extends Notifier<ExerciseSearchState> {
             equipmentId: filter.equipmentId,
             categoryId: filter.categoryId,
             onlyWithImage: filter.onlyWithImage,
+            onlyWithVideo: filter.onlyWithVideo,
             page: 0,
             size: 24,
           );
@@ -366,6 +367,7 @@ class ExerciseSearchController extends Notifier<ExerciseSearchState> {
             equipmentId: filter.equipmentId,
             categoryId: filter.categoryId,
             onlyWithImage: filter.onlyWithImage,
+            onlyWithVideo: filter.onlyWithVideo,
             page: state.page + 1,
             size: 24,
           );
