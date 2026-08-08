@@ -20,6 +20,20 @@ APK no Android). Tudo sobe com `docker compose`.
 
 ---
 
+## Baixar
+
+[![Release](https://img.shields.io/github/v/release/felipemacedo1/meu_treino?label=release)](https://github.com/felipemacedo1/meu_treino/releases/latest)
+
+- **Android:** [baixe o APK](https://github.com/felipemacedo1/meu_treino/releases/latest)
+  (use o `meu-treino-x.y.z.apk` universal na dúvida). Depois de instalar, na tela
+  de login toque em **Servidor** e aponte para a máquina onde a API está rodando.
+- **iPhone / iPad:** abra `http://SEU_IP:8081` no Safari e use
+  *Compartilhar → Adicionar à Tela de Início*.
+- **Computador:** o app web já sobe junto com o `make up`.
+
+O APK precisa que o backend esteja no ar em algum lugar — comece pela seção
+abaixo.
+
 ## Começando (2 comandos)
 
 ```bash
