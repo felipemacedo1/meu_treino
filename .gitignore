@@ -15,9 +15,17 @@ app/.packages
 app/android/.gradle/
 app/android/app/build/
 app/android/local.properties
-app/android/key.properties
 app/android/.cxx/
 app/web/flutter_service_worker.js
+
+# --------------------------- assinatura android ----------------------
+# Nunca versionar chaves de assinatura nem senhas.
+app/android/key.properties
+*.jks
+*.keystore
+
+# ------------------------------ artefatos ----------------------------
+dist/
 
 # --------------------------------- ide -------------------------------
 .idea/
