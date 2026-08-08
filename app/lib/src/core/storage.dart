@@ -1,11 +1,15 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Persistencia local simples (token JWT e preferencia de tema).
+/// Persistencia local simples: token JWT e tema escolhido.
+///
+/// O tema fica salvo localmente para ser aplicado imediatamente na abertura do
+/// app, sem esperar a resposta da API. O perfil do usuario guarda a mesma
+/// preferencia no servidor, para acompanhar a conta em outro dispositivo.
 class Storage {
   Storage(this._prefs);
 
   static const _tokenKey = 'auth_token';
-  static const _themeKey = 'theme_mode';
+  static const _themeKey = 'theme_id';
 
   final SharedPreferences _prefs;
 
@@ -17,8 +21,8 @@ class Storage {
 
   Future<void> clearToken() => _prefs.remove(_tokenKey);
 
-  /// 'light' | 'dark' | 'system'
-  String get themeMode => _prefs.getString(_themeKey) ?? 'system';
+  /// Identificador do tema (ver AppThemes). Null na primeira execucao.
+  String? get themeId => _prefs.getString(_themeKey);
 
-  Future<void> saveThemeMode(String mode) => _prefs.setString(_themeKey, mode);
+  Future<void> saveThemeId(String id) => _prefs.setString(_themeKey, id);
 }
