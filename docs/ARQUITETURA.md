@@ -90,6 +90,44 @@ links limpos (`/workouts/3`) que funcionam ao recarregar a página.
 tela cheia, sem depender de loja nem de assinatura. A pasta `app/android` está
 configurada para quem quiser gerar o APK.
 
+## Design system
+
+**Tokens semânticos, não cores.** `AppTokens` é um `ThemeExtension` com 25
+tokens (`background`, `surface`, `primary`, `textMuted`, `border`, `progress`,
+`chartColors`…). Nenhuma tela usa `Color(0x...)`, `Colors.x` ou
+`Theme.of(context).colorScheme` — tudo passa por `context.tokens`. Isso é o que
+permite ter 6 temas sem tocar em componente nenhum. `AppTokens.lerp` está
+implementado, então a troca de tema anima em vez de piscar.
+
+**Tema é dado, não código.** `ThemeDefinition` carrega id, nome, tagline e
+tokens; `AppThemes` é o catálogo. Todos os temas partem da mesma estrutura de
+superfícies e neutros (`_build`) e trocam apenas a família de cor da marca —
+por isso mudam a iluminação sem mudar a identidade. `ThemeBuilder` converte a
+definição em `ThemeData` cobrindo todos os componentes Material, então um botão
+sem estilo explícito já nasce coerente.
+
+**Tipografia fixa entre temas.** Chakra Petch para títulos e números, Rajdhani
+para interface. A primeira escolha foi Orbitron, descartada por dois motivos
+concretos: o único glifo de zero é cortado por uma diagonal (parecia glifo
+quebrado nas telas) e as letras são largas demais para nomes de exercício em
+telas pequenas.
+
+**Números estáveis via `MonoDigits`.** Nenhuma das duas fontes tem `tnum` e os
+dígitos têm larguras diferentes (382–652 unidades em Chakra Petch), o que fazia
+o cronômetro tremer a cada segundo. `MonoDigits` mede o dígito mais largo em
+tempo de execução e desenha cada caractere em uma célula desse tamanho —
+funciona com qualquer fonte, sem depender de recurso OpenType.
+
+**Neon como iluminação, não preenchimento.** O brilho é reservado para o que
+precisa ser notado: ação primária, progresso, série atual e exercício da vez.
+Na tela de treino, só o exercício em execução recebe borda iluminada — se todos
+recebessem, o destaque não significaria nada.
+
+**Endereço da API em tempo de execução.** No web o nginx serve `/api` no mesmo
+host. No APK isso não existe: a API roda na máquina do usuário e o IP muda. Por
+isso `serverUrlProvider` guarda a base efetiva e o `apiClientProvider` a
+observa — trocar o servidor recria o Dio, sem reinstalar o app.
+
 ## Infra
 
 **Três serviços no compose**: `db` (Postgres 16), `api` (jar em Temurin 21) e

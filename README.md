@@ -4,16 +4,19 @@ Aplicativo de musculação completo para uso pessoal: fichas de treino, execuç�
 sessão com cronômetro de descanso, histórico, evolução de carga e catálogo com
 **834 exercícios** já dentro do banco (fonte: [wger](https://wger.de)).
 
-Backend em **Spring Boot + PostgreSQL**, app em **Flutter** (roda no navegador do
-celular como PWA e também compila para Android). Tudo sobe com `docker compose`.
+Estética dark/sci-fi com laranja neon e **6 temas** trocáveis. Backend em
+**Spring Boot + PostgreSQL**, app em **Flutter** (PWA no navegador do celular,
+APK no Android). Tudo sobe com `docker compose`.
 
-| Início | Ficha | Treino em andamento |
-|---|---|---|
-| ![Dashboard](docs/screenshots/01-dashboard.png) | ![Ficha](docs/screenshots/02-ficha.png) | ![Sessão](docs/screenshots/03-treino-em-andamento.png) |
+![Temas](docs/screenshots/00-temas.png)
 
-| Resumo do treino | Evolução (tema claro) | Catálogo |
+| Início | Treino em andamento | Cronômetro de descanso |
 |---|---|---|
-| ![Resumo](docs/screenshots/04-resumo.png) | ![Evolução](docs/screenshots/05-evolucao-tema-claro.png) | ![Catálogo](docs/screenshots/06-catalogo.png) |
+| ![Dashboard](docs/screenshots/01-dashboard.png) | ![Sessão](docs/screenshots/03-treino-em-andamento.png) | ![Cronômetro](docs/screenshots/07-cronometro.png) |
+
+| Catálogo | Evolução | Aparência |
+|---|---|---|
+| ![Catálogo](docs/screenshots/06-catalogo.png) | ![Evolução](docs/screenshots/05-evolucao.png) | ![Temas](docs/screenshots/08-aparencia.png) |
 
 ---
 
@@ -106,8 +109,13 @@ make reset     # APAGA o banco e recria
 - Peso, altura, IMC, objetivo, experiência, dias disponíveis, tempo por treino
   e meta semanal. Registro de peso corporal com gráfico.
 
-**UX**
-- Material Design 3, tema claro e escuro (ou seguir o sistema).
+**Aparência**
+- Identidade dark/sci-fi com laranja neon, tipografia Chakra Petch + Rajdhani.
+- **6 temas** trocáveis em Perfil → Aparência, com preview de cada um:
+  Neon Orange (padrão), Cyber Red, Plasma Purple, Electric Blue, Toxic Green e
+  Minimal Dark. A troca é imediata e a preferência acompanha sua conta.
+- Design system com tokens semânticos: nenhuma cor hardcoded nas telas
+  (detalhes em [docs/ARQUITETURA.md](docs/ARQUITETURA.md)).
 
 ---
 
@@ -238,16 +246,58 @@ make web     # Flutter no Chrome, apontando para localhost:8080
 Variáveis de ambiente ficam em `.env` (criado a partir de `.env.example`):
 portas, credenciais do banco, `JWT_SECRET`, CORS e configuração do wger.
 
-### Android
-
-A pasta `app/android` está pronta. Com o Android SDK + cmdline-tools instalados:
+### Android (APK)
 
 ```bash
-cd app
-flutter build apk --release --dart-define=API_BASE_URL=http://SEU_IP:8080/api
+bash scripts/build-apk.sh              # usa o IP desta máquina como padrão
+bash scripts/build-apk.sh 192.168.0.8:8080
 ```
 
-O APK sai em `app/build/app/outputs/flutter-apk/`.
+Sai em `dist/`: um APK universal e um por arquitetura (menores). O endereço da
+API é só o **padrão** — dentro do app, na tela de login, em **Servidor**, você
+troca para onde quiser sem recompilar.
+
+Para assinar com chave de release (recomendado, permite instalar atualizações
+por cima):
+
+```bash
+keytool -genkeypair -v -keystore ~/.android/meu-treino-release.jks \
+  -storetype JKS -keyalg RSA -keysize 2048 -validity 10950 -alias meu-treino
+```
+
+Crie `app/android/key.properties` (não versionado):
+
+```properties
+storeFile=/home/SEU_USUARIO/.android/meu-treino-release.jks
+storePassword=...
+keyAlias=meu-treino
+keyPassword=...
+```
+
+Guarde o keystore: sem ele não é possível publicar atualizações que instalem
+sobre esta versão. Sem o arquivo, o build cai na chave de debug.
+
+### iOS
+
+Não há build de iOS neste repositório pronto para instalar: gerar `.ipa` exige
+**macOS com Xcode** e conta de desenvolvedor Apple. A pasta `app/ios` está
+configurada (nome, status bar clara, acesso à rede local), então em um Mac:
+
+```bash
+cd app && flutter build ipa --dart-define=API_BASE_URL=http://SEU_IP:8080/api
+```
+
+O caminho prático no iPhone é o **PWA**: abra o app no Safari e use
+*Compartilhar → Adicionar à Tela de Início*. Abre em tela cheia, com ícone.
+
+---
+
+## Deploy gratuito
+
+Opções, com os números reais do projeto e as pegadinhas de cada free tier, em
+**[docs/DEPLOY.md](docs/DEPLOY.md)**. Resumo: Oracle Cloud Always Free roda o
+`docker compose` inteiro sem hibernar; Render é o mais rápido de configurar mas
+a API dorme; Neon + Koyeb + Cloudflare Pages é a combinação mais leve.
 
 ---
 
