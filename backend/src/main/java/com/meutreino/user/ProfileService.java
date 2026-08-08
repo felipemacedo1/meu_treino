@@ -83,6 +83,9 @@ public class ProfileService {
         if (request.weeklyGoal() != null) {
             profile.setWeeklyGoal(request.weeklyGoal());
         }
+        if (request.theme() != null && !request.theme().isBlank()) {
+            profile.setTheme(request.theme().trim());
+        }
         profile.setUpdatedAt(Instant.now());
         profileRepository.save(profile);
         return toDto(user, profile);
@@ -150,6 +153,7 @@ public class ProfileService {
                 profile.getAvailableDays(),
                 profile.getSessionMinutes(),
                 profile.getWeeklyGoal(),
+                profile.getTheme(),
                 bmi);
     }
 }

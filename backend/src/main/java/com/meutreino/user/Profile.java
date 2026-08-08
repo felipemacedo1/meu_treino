@@ -47,6 +47,9 @@ public class Profile {
     @Column(name = "weekly_goal")
     private Integer weeklyGoal;
 
+    /** Tema visual escolhido no app (ver AppThemes no Flutter). */
+    private String theme;
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
 }

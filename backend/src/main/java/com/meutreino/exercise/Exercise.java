@@ -42,6 +42,13 @@ public class Exercise {
     @Column(name = "name_pt")
     private String namePt;
 
+    /**
+     * Marca traducoes curadas por nos. O sync do wger nao sobrescreve estes
+     * nomes, porque algumas traducoes de lá estao erradas.
+     */
+    @Column(name = "name_pt_locked", nullable = false)
+    private boolean namePtLocked = false;
+
     @Column(columnDefinition = "text")
     private String description;
 

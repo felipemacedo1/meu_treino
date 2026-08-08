@@ -146,7 +146,9 @@ public class WgerSyncService {
             exercise.setWgerId(remoteExercise.id());
             exercise.setUuid(remoteExercise.uuid());
             exercise.setName(trim(base.name(), 255));
-            if (pt != null) {
+            // Nao sobrescreve traducao curada: parte dos nomes pt do wger
+            // esta incorreta (ex.: "Pull-ups" como "Flexoes de braco").
+            if (pt != null && !exercise.isNamePtLocked()) {
                 exercise.setNamePt(trim(pt.name(), 255));
             }
             exercise.setDescription(trim(Html.toPlainText(base.description()), 4000));

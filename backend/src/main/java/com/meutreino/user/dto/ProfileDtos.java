@@ -9,6 +9,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 public final class ProfileDtos {
 
@@ -28,6 +29,7 @@ public final class ProfileDtos {
             Integer availableDays,
             Integer sessionMinutes,
             Integer weeklyGoal,
+            String theme,
             Double bmi) {
     }
 
@@ -41,7 +43,8 @@ public final class ProfileDtos {
             String experience,
             @Min(1) @Max(7) Integer availableDays,
             @Min(10) @Max(300) Integer sessionMinutes,
-            @Min(1) @Max(14) Integer weeklyGoal) {
+            @Min(1) @Max(14) Integer weeklyGoal,
+            @Size(max = 40) String theme) {
     }
 
     public record BodyWeightRequest(
