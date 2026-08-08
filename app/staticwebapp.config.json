@@ -1,0 +1,47 @@
+{
+  "//": "Azure Static Web Apps: o app usa URLs de caminho (/workouts/3), entao",
+  "//2": "qualquer rota desconhecida precisa devolver index.html, senao dar F5",
+  "//3": "em uma rota interna resulta em 404.",
+
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/assets/*",
+      "/icons/*",
+      "/canvaskit/*",
+      "*.{js,css,json,png,ttf,wasm,symbols}"
+    ]
+  },
+
+  "mimeTypes": {
+    ".wasm": "application/wasm",
+    ".json": "application/json",
+    ".ttf": "font/ttf",
+    ".symbols": "text/plain"
+  },
+
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "SAMEORIGIN",
+    "Referrer-Policy": "strict-origin-when-cross-origin"
+  },
+
+  "routes": [
+    {
+      "route": "/assets/*",
+      "headers": { "Cache-Control": "public, max-age=2592000" }
+    },
+    {
+      "route": "/canvaskit/*",
+      "headers": { "Cache-Control": "public, max-age=2592000" }
+    },
+    {
+      "route": "/index.html",
+      "headers": { "Cache-Control": "no-cache" }
+    },
+    {
+      "route": "/flutter_service_worker.js",
+      "headers": { "Cache-Control": "no-cache" }
+    }
+  ]
+}

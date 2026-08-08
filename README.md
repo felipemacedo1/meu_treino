@@ -308,10 +308,24 @@ O caminho prático no iPhone é o **PWA**: abra o app no Safari e use
 
 ## Deploy gratuito
 
-Opções, com os números reais do projeto e as pegadinhas de cada free tier, em
-**[docs/DEPLOY.md](docs/DEPLOY.md)**. Resumo: Oracle Cloud Always Free roda o
-`docker compose` inteiro sem hibernar; Render é o mais rápido de configurar mas
-a API dorme; Neon + Koyeb + Cloudflare Pages é a combinação mais leve.
+Guia completo com os números reais do projeto e as pegadinhas de cada free tier
+em **[docs/DEPLOY.md](docs/DEPLOY.md)**.
+
+Se você tem o **GitHub Student Pack**, o caminho já vem pronto no repositório —
+API no Azure Container Apps, banco no Neon e app no Azure Static Web Apps, tudo
+dentro das cotas gratuitas (o crédito de US$ 100 fica de reserva):
+
+```bash
+# 1. banco no neon.tech, 2. rode a action "Imagem da API", depois:
+az login
+export DB_URL='jdbc:postgresql://...neon.tech/neondb?sslmode=require'
+export DB_USER='...' DB_PASSWORD='...'
+bash infra/azure/deploy-api.sh
+```
+
+O app web sai pela action *"App web (Azure Static Web Apps)"*. Alternativas:
+Oracle Cloud Always Free roda o `docker compose` inteiro sem hibernar; Render é
+o mais rápido de configurar, mas a API dorme.
 
 ---
 

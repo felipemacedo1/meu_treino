@@ -29,7 +29,109 @@ veja "Enxugando para caber" no fim.
 
 ---
 
-## Opção 1 — Oracle Cloud Always Free (recomendada)
+## Opção 0 — Azure for Students (GitHub Student Pack)
+
+O que a oferta garante: **US$ 100 de crédito por ano, sem cartão de crédito**,
+renovável enquanto você for estudante ([detalhes da oferta](https://azure.microsoft.com/en-us/pricing/offers/ms-azr-0170p)).
+
+Uma ressalva que evita surpresa: a lista de "20+ serviços grátis por 12 meses"
+(que inclui PostgreSQL B1ms) é documentada para a **Azure free account**, que é
+uma oferta diferente do Azure for Students. Não conte com o Postgres gerenciado
+de graça: um B1ms custa ~US$ 12–15/mês e consumiria o crédito em ~7 meses.
+
+Por isso o arranjo abaixo **não gasta o crédito** — ele fica de reserva:
+
+| Peça | Onde | Custo |
+|---|---|---|
+| `api` | Azure Container Apps (plano de consumo) | dentro da cota gratuita |
+| `db` | Neon | gratuito, sem prazo |
+| `web` | Azure Static Web Apps (plano Free) | gratuito, sem prazo |
+
+O Container Apps tem cota gratuita mensal **por assinatura** de 180.000 vCPU-s,
+360.000 GiB-s e 2 milhões de requisições ([preços](https://azure.microsoft.com/en-us/pricing/details/container-apps/)),
+e escala a zero. Para uso pessoal isso sobra.
+
+### Passo 1 — banco no Neon
+
+Crie um projeto em [neon.tech](https://neon.tech) e monte a URL JDBC:
+
+```
+jdbc:postgresql://ep-xxxx-yyyy.sa-east-1.aws.neon.tech/neondb?sslmode=require
+```
+
+O Flyway cria o schema e o catálogo de 834 exercícios no primeiro boot.
+
+### Passo 2 — imagem da API no GHCR
+
+O repositório já tem o workflow. Rode a action **"Imagem da API"** (ou faça um
+push em `backend/`) e depois deixe o pacote público em
+*Settings → Packages → meu-treino-api → Change visibility*, para o Azure baixar
+sem credencial.
+
+### Passo 3 — API no Container Apps
+
+```bash
+az login
+export DB_URL='jdbc:postgresql://ep-xxxx.sa-east-1.aws.neon.tech/neondb?sslmode=require'
+export DB_USER='seu_usuario'
+export DB_PASSWORD='sua_senha'
+export IMAGE='ghcr.io/felipemacedo1/meu-treino-api:latest'
+
+bash infra/azure/deploy-api.sh
+```
+
+O script cria o resource group, o ambiente e a aplicação, gera um `JWT_SECRET`
+aleatório, guarda senha e segredo como *secrets* do Container App, e imprime a
+URL pública no fim.
+
+### Passo 4 — app web no Static Web Apps
+
+Crie um recurso Static Web App (plano **Free**), fonte "GitHub", e copie o
+*deployment token*. No repositório, em *Settings → Secrets and variables →
+Actions*:
+
+- secret `AZURE_STATIC_WEB_APPS_API_TOKEN` = o token
+- variable `API_BASE_URL` = `https://sua-api.<região>.azurecontainerapps.io/api`
+
+Rode a action **"App web (Azure Static Web Apps)"**. O `staticwebapp.config.json`
+já está no repositório devolvendo `index.html` em qualquer rota — sem isso, dar
+F5 em `/workouts/3` daria 404.
+
+### Passo 5 — fechar o CORS
+
+Depois de saber o domínio do app:
+
+```bash
+az containerapp update -g meu-treino -n meu-treino-api \
+  --set-env-vars CORS_ALLOWED_ORIGINS=https://SEU-APP.azurestaticapps.net
+```
+
+### Passo 6 — APK
+
+Na tela de login, em **Servidor**, coloque a URL da API. Como é HTTPS, não há
+problema de cleartext.
+
+### O que esperar
+
+- **Cold start.** Com `--min-replicas 0` a primeira requisição depois de um
+  período parado espera o container subir (~7s de boot da API + o tempo de
+  alocação). Aceitável para uso pessoal; se incomodar, troque para
+  `--min-replicas 1` — sai da cota gratuita e passa a consumir o crédito
+  (na ordem de ~US$ 25–30/mês com 0.5 vCPU, ou seja, ~3 meses de crédito).
+- **Espaço no Neon.** O cache de mídias pode levar o banco a ~150 MB, contra
+  ~0,5 GB do plano gratuito. Cabe, mas veja "Enxugando para caber" no fim.
+- **Região.** `brazilsouth` reduz latência daqui; se o Container Apps não
+  estiver disponível na sua assinatura lá, use `eastus`.
+
+> Vale conferir também os outros créditos do Student Pack. Alguns parceiros dão
+> crédito de VM (DigitalOcean, por exemplo) que, num droplet de ~US$ 6/mês,
+> rodaria o `docker compose` inteiro sempre ligado por bem mais tempo do que os
+> US$ 100 da Azure. As ofertas mudam — confira em
+> [education.github.com/pack](https://education.github.com/pack).
+
+---
+
+## Opção 1 — Oracle Cloud Always Free
 
 Uma VM ARM gratuita "para sempre", onde você roda **o `docker compose` inteiro**,
 exatamente como na sua máquina. Sem adaptação, sem serviço dormindo.
@@ -168,6 +270,9 @@ Se o banco gratuito for de 500 MB e você quiser folga:
 
 ## Resumo
 
+- **Tem GitHub Student Pack:** Azure Container Apps + Neon + Static Web Apps.
+  Fica dentro das cotas gratuitas e preserva o crédito de US$ 100. Scripts e
+  workflows prontos no repositório.
 - **Quer o projeto inteiro rodando de graça e sem dormir:** Oracle Cloud Always
   Free, com o `docker compose` como está.
 - **Quer o caminho mais rápido e aceita a API hibernar:** Render.

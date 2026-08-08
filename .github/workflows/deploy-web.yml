@@ -1,0 +1,57 @@
+name: App web (Azure Static Web Apps)
+
+# Compila o Flutter web e publica no Azure Static Web Apps (plano Free).
+#
+# Configure antes:
+#   - secret  AZURE_STATIC_WEB_APPS_API_TOKEN  (token de deploy do recurso)
+#   - variable API_BASE_URL                    (ex.: https://sua-api.azurecontainerapps.io/api)
+#
+# Em Settings > Secrets and variables > Actions.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - '.github/workflows/deploy-web.yml'
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instala o Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dependencias
+        working-directory: app
+        run: flutter pub get
+
+      - name: Verifica o codigo
+        working-directory: app
+        run: flutter analyze --no-fatal-infos
+
+      - name: Compila o bundle web
+        working-directory: app
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+        run: |
+          if [ -z "$API_BASE_URL" ]; then
+            echo "::error::Defina a variable API_BASE_URL com a URL publica da API (terminando em /api)"
+            exit 1
+          fi
+          flutter build web --release --dart-define=API_BASE_URL="$API_BASE_URL"
+
+      - name: Publica no Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: app/build/web
+          skip_app_build: true
+          config_file_location: app
