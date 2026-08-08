@@ -6,6 +6,7 @@ import '../../core/formatters.dart';
 import '../../core/router.dart';
 import '../../models/workout.dart';
 import '../../providers/app_providers.dart';
+import '../../theme/theme.dart';
 import '../../widgets/common.dart';
 import '../exercises/exercises_page.dart';
 import 'exercise_config_sheet.dart';
@@ -243,10 +244,11 @@ class _WorkoutEditorPageState extends ConsumerState<WorkoutEditorPage> {
   }
 
   Widget _buildEditor(BuildContext context) {
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
     final day = _currentDay;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(isNew ? 'Novo treino' : 'Editar treino'),
         actions: [
@@ -261,12 +263,15 @@ class _WorkoutEditorPageState extends ConsumerState<WorkoutEditorPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _saving ? null : _save,
         icon: _saving
-            ? const SizedBox(
+            ? SizedBox(
                 height: 18,
                 width: 18,
-                child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  color: context.tokens.onPrimary,
+                ),
               )
-            : const Icon(Icons.check_rounded),
+            : const Icon(Icons.check_rounded, size: 18),
         label: const Text('Salvar treino'),
       ),
       body: ListView(
@@ -294,7 +299,7 @@ class _WorkoutEditorPageState extends ConsumerState<WorkoutEditorPage> {
           const SizedBox(height: 24),
           Row(
             children: [
-              Expanded(child: Text('Dias', style: theme.textTheme.titleMedium)),
+              Expanded(child: LabelText('Dias', size: 11, color: tokens.textPrimary)),
               TextButton.icon(
                 onPressed: _addDay,
                 icon: const Icon(Icons.add_rounded, size: 18),
@@ -320,9 +325,9 @@ class _WorkoutEditorPageState extends ConsumerState<WorkoutEditorPage> {
             ),
           ),
           const SizedBox(height: 18),
-          Card(
+          AppPanel(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.zero,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -332,11 +337,11 @@ class _WorkoutEditorPageState extends ConsumerState<WorkoutEditorPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(day.name, style: theme.textTheme.titleSmall),
+                            Text(day.name, style: context.texts.titleMedium),
                             Text(
                               '${day.exercises.length} exercícios · ${day.totalSets} séries',
-                              style: theme.textTheme.bodySmall
-                                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                              style: context.texts.bodySmall
+                                  ?.copyWith(color: tokens.textMuted),
                             ),
                           ],
                         ),
@@ -355,8 +360,8 @@ class _WorkoutEditorPageState extends ConsumerState<WorkoutEditorPage> {
                       child: Center(
                         child: Text(
                           'Nenhum exercício. Toque em "Adicionar exercício".',
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                          style: context.texts.bodySmall
+                              ?.copyWith(color: tokens.textMuted),
                         ),
                       ),
                     )
@@ -373,9 +378,9 @@ class _WorkoutEditorPageState extends ConsumerState<WorkoutEditorPage> {
                           key: ValueKey('${item.exerciseId}-$index'),
                           margin: const EdgeInsets.only(bottom: 8),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest
-                                .withValues(alpha: 0.45),
-                            borderRadius: BorderRadius.circular(16),
+                            color: tokens.surfaceSunken,
+                            borderRadius: AppRadius.all(AppRadius.md),
+                            border: Border.all(color: tokens.border),
                           ),
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
@@ -385,15 +390,12 @@ class _WorkoutEditorPageState extends ConsumerState<WorkoutEditorPage> {
                                   index: index,
                                   child: Icon(
                                     Icons.drag_indicator_rounded,
-                                    color: theme.colorScheme.onSurfaceVariant,
+                                    color: tokens.textMuted,
+                                    size: 20,
                                   ),
                                 ),
                                 const SizedBox(width: 6),
-                                ExerciseImage(
-                                  url: item.resolvedImageUrl,
-                                  size: 44,
-                                  radius: 11,
-                                ),
+                                ExerciseImage(url: item.resolvedImageUrl, size: 42),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Column(
@@ -403,15 +405,18 @@ class _WorkoutEditorPageState extends ConsumerState<WorkoutEditorPage> {
                                         item.exerciseName,
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
-                                        style: theme.textTheme.bodyMedium
+                                        style: context.texts.bodyMedium
                                             ?.copyWith(fontWeight: FontWeight.w600),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
                                         '${item.targetSets} x ${item.targetReps} · ${formatRest(item.restSeconds)}'
                                         '${item.targetWeight != null ? ' · ${formatWeight(item.targetWeight)}' : ''}',
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                                        style: AppTypography.display(
+                                          size: 10.5,
+                                          weight: FontWeight.w600,
+                                          color: tokens.textMuted,
+                                        ),
                                       ),
                                     ],
                                   ),

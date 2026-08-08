@@ -93,15 +93,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     (value == null || value.length < 6) ? 'Mínimo de 6 caracteres' : null,
               ),
               const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _loading ? null : _submit,
-                child: _loading
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white),
-                      )
-                    : const Text('Criar conta'),
+              AuthSubmitButton(
+                label: 'Criar conta',
+                loading: _loading,
+                onPressed: _submit,
               ),
             ],
           ),

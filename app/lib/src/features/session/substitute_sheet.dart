@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/exercise.dart';
 import '../../providers/app_providers.dart';
+import '../../theme/theme.dart';
 import '../../widgets/common.dart';
 import '../exercises/exercises_page.dart';
 
@@ -29,7 +30,7 @@ class SubstituteSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final equivalents = ref.watch(equivalentsProvider(exerciseId));
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
 
     return DraggableScrollableSheet(
       expand: false,
@@ -39,17 +40,9 @@ class SubstituteSheet extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Trocar exercício', style: theme.textTheme.titleLarge),
-                const SizedBox(height: 2),
-                Text(
-                  'A troca vale só para o treino de hoje. Sua ficha continua intacta.',
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                ),
-              ],
+            child: const SectionTitle(
+              'Trocar exercício',
+              subtitle: 'A troca vale só para o treino de hoje. Sua ficha continua intacta.',
             ),
           ),
           Expanded(
@@ -67,8 +60,7 @@ class SubstituteSheet extends ConsumerWidget {
                   if (list.isEmpty)
                     Text(
                       'Nenhum equivalente encontrado. Use a busca abaixo.',
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      style: context.texts.bodySmall?.copyWith(color: tokens.textMuted),
                     )
                   else
                     ...list.map(
@@ -77,7 +69,7 @@ class SubstituteSheet extends ConsumerWidget {
                         child: ExerciseListTile(
                           exercise: exercise,
                           onTap: () => Navigator.pop(context, exercise),
-                          trailing: const Icon(Icons.swap_horiz_rounded),
+                          trailing: Icon(Icons.swap_horiz_rounded, color: tokens.primary, size: 20),
                         ),
                       ),
                     ),

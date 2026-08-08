@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router.dart';
 import '../../models/exercise.dart';
 import '../../providers/app_providers.dart';
+import '../../theme/theme.dart';
 import '../../widgets/common.dart';
 import 'exercise_filters_sheet.dart';
 
@@ -69,7 +70,6 @@ class _ExerciseBrowserState extends ConsumerState<ExerciseBrowser> {
   Widget build(BuildContext context) {
     final state = ref.watch(exerciseSearchProvider);
     final controller = ref.read(exerciseSearchProvider.notifier);
-    final theme = Theme.of(context);
 
     final header = Padding(
       padding: EdgeInsets.fromLTRB(20, widget.showAppBar ? 0 : 12, 20, 8),
@@ -81,7 +81,12 @@ class _ExerciseBrowserState extends ConsumerState<ExerciseBrowser> {
               padding: const EdgeInsets.only(bottom: 12),
               child: Row(
                 children: [
-                  Expanded(child: Text(widget.title, style: theme.textTheme.titleLarge)),
+                  Expanded(
+                    child: Text(
+                      widget.title.toUpperCase(),
+                      style: AppTypography.display(size: 16, weight: FontWeight.w700),
+                    ),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.close_rounded),
                     onPressed: () => Navigator.maybePop(context),
@@ -129,11 +134,9 @@ class _ExerciseBrowserState extends ConsumerState<ExerciseBrowser> {
             ],
           ),
           const SizedBox(height: 10),
-          Text(
-            state.loading
-                ? 'Buscando...'
-                : '${state.total} exercício(s) encontrado(s)',
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          LabelText(
+            state.loading ? 'Buscando...' : '${state.total} exercícios encontrados',
+            size: 9.5,
           ),
         ],
       ),
@@ -193,6 +196,7 @@ class _ExerciseBrowserState extends ConsumerState<ExerciseBrowser> {
     if (!widget.showAppBar) return body;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(widget.title),
         automaticallyImplyLeading: Navigator.canPop(context),
@@ -216,24 +220,23 @@ class ExerciseListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
+    final tokens = context.tokens;
+    return AppPanel(
+      padding: const EdgeInsets.all(11),
+      onTap: onTap,
+      child: Padding(
+          padding: EdgeInsets.zero,
           child: Row(
             children: [
-              ExerciseImage(url: exercise.resolvedImageUrl, size: 60),
-              const SizedBox(width: 14),
+              ExerciseImage(url: exercise.resolvedImageUrl, size: 56),
+              const SizedBox(width: 13),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       exercise.name,
-                      style: theme.textTheme.titleSmall,
+                      style: context.texts.titleSmall,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -241,26 +244,29 @@ class ExerciseListTile extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         exercise.subtitle,
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        style: context.texts.bodySmall
+                            ?.copyWith(color: tokens.textMuted, fontSize: 12),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                     if (exercise.hasVideo) ...[
                       const SizedBox(height: 6),
-                      const TagChip('vídeo', icon: Icons.play_circle_outline_rounded),
+                      TagChip(
+                        'vídeo',
+                        icon: Icons.play_circle_outline_rounded,
+                        color: tokens.primary,
+                        dense: true,
+                      ),
                     ],
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              trailing ??
-                  Icon(Icons.chevron_right_rounded, color: theme.colorScheme.onSurfaceVariant),
+              trailing ?? Icon(Icons.chevron_right_rounded, color: tokens.textMuted, size: 20),
             ],
           ),
         ),
-      ),
     );
   }
 }
@@ -270,6 +276,7 @@ Future<ExerciseSummary?> pickExercise(BuildContext context, {String title = 'Esc
   return Navigator.of(context).push<ExerciseSummary>(
     MaterialPageRoute(
       builder: (context) => Scaffold(
+        backgroundColor: Colors.transparent,
         body: SafeArea(
           child: ExerciseBrowser(
             title: title,

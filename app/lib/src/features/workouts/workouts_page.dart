@@ -6,6 +6,7 @@ import '../../core/formatters.dart';
 import '../../core/router.dart';
 import '../../models/workout.dart';
 import '../../providers/app_providers.dart';
+import '../../theme/theme.dart';
 import '../../widgets/common.dart';
 import '../session/start_session.dart';
 import 'split_picker_sheet.dart';
@@ -31,7 +32,7 @@ class WorkoutsPage extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _createFromTemplate(context, ref),
-        icon: const Icon(Icons.auto_awesome_rounded),
+        icon: const Icon(Icons.auto_awesome_rounded, size: 18),
         label: const Text('Ficha pronta'),
       ),
       body: workouts.when(
@@ -43,7 +44,7 @@ class WorkoutsPage extends ConsumerWidget {
         data: (list) {
           if (list.isEmpty) {
             return EmptyState(
-              icon: Icons.list_alt_rounded,
+              icon: Icons.view_agenda_rounded,
               title: 'Nenhum treino ainda',
               message:
                   'Escolha uma divisão pronta (ABC, ABCD, ABCDE, Push Pull Legs, Upper/Lower) ou monte do zero.',
@@ -51,13 +52,13 @@ class WorkoutsPage extends ConsumerWidget {
                 children: [
                   FilledButton.icon(
                     onPressed: () => _createFromTemplate(context, ref),
-                    icon: const Icon(Icons.auto_awesome_rounded),
+                    icon: const Icon(Icons.auto_awesome_rounded, size: 18),
                     label: const Text('Usar ficha pronta'),
                   ),
                   const SizedBox(height: 10),
                   OutlinedButton.icon(
                     onPressed: () => context.push(AppRoutes.workoutNew),
-                    icon: const Icon(Icons.edit_note_rounded),
+                    icon: const Icon(Icons.edit_note_rounded, size: 18),
                     label: const Text('Montar do zero'),
                   ),
                 ],
@@ -65,11 +66,13 @@ class WorkoutsPage extends ConsumerWidget {
             );
           }
           return RefreshIndicator(
+            color: context.tokens.primary,
+            backgroundColor: context.tokens.surfaceElevated,
             onRefresh: () => ref.read(workoutsProvider.notifier).reload(),
             child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+              padding: const EdgeInsets.fromLTRB(18, 6, 18, 100),
               itemCount: list.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) => _WorkoutTile(
                 workout: list[index],
                 onDuplicate: () => _duplicate(context, ref, list[index]),
@@ -138,107 +141,146 @@ class _WorkoutTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => context.push(AppRoutes.workout(workout.id)),
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
+    final tokens = context.tokens;
+    return AppPanel(
+      padding: const EdgeInsets.fromLTRB(16, 14, 8, 16),
+      onTap: () => context.push(AppRoutes.workout(workout.id)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(workout.name, style: theme.textTheme.titleMedium),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${splitLabel(workout.splitType)} · ${workout.exerciseCount} exercícios · último ${relativeDate(workout.lastSessionAt)}',
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                        ),
-                      ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    LabelText(splitLabel(workout.splitType), size: 9.5, color: tokens.primary),
+                    const SizedBox(height: 5),
+                    Text(
+                      workout.name,
+                      style: context.texts.titleMedium,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  PopupMenuButton<String>(
-                    onSelected: (value) => switch (value) {
-                      'edit' => context.push(AppRoutes.workoutEdit(workout.id)),
-                      'duplicate' => onDuplicate(),
-                      'delete' => onDelete(),
-                      _ => null,
-                    },
-                    itemBuilder: (context) => const [
-                      PopupMenuItem(
-                        value: 'edit',
-                        child: ListTile(
-                          leading: Icon(Icons.edit_rounded),
-                          title: Text('Editar'),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'duplicate',
-                        child: ListTile(
-                          leading: Icon(Icons.copy_rounded),
-                          title: Text('Duplicar'),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: ListTile(
-                          leading: Icon(Icons.delete_outline_rounded),
-                          title: Text('Excluir'),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 5),
+                    Text(
+                      '${workout.exerciseCount} exercícios · último ${relativeDate(workout.lastSessionAt)}',
+                      style: context.texts.bodySmall
+                          ?.copyWith(color: tokens.textMuted, fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: workout.days
-                    .map((day) => TagChip('${day.label} · ${day.exerciseCount}'))
-                    .toList(),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () => StartSessionFlow.fromWorkout(
-                        context,
-                        ref,
-                        workoutId: workout.id,
-                        workoutName: workout.name,
-                        days: daysOfSummary(workout),
-                      ),
-                      icon: const Icon(Icons.play_arrow_rounded),
-                      label: const Text('Treinar agora'),
-                      style: FilledButton.styleFrom(minimumSize: const Size(0, 46)),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert_rounded, size: 20),
+                onSelected: (value) => switch (value) {
+                  'edit' => context.push(AppRoutes.workoutEdit(workout.id)),
+                  'duplicate' => onDuplicate(),
+                  'delete' => onDelete(),
+                  _ => null,
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: ListTile(
+                      leading: Icon(Icons.edit_rounded),
+                      title: Text('Editar'),
+                      contentPadding: EdgeInsets.zero,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  OutlinedButton(
-                    onPressed: () => context.push(AppRoutes.workout(workout.id)),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(0, 46),
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                  PopupMenuItem(
+                    value: 'duplicate',
+                    child: ListTile(
+                      leading: Icon(Icons.copy_rounded),
+                      title: Text('Duplicar'),
+                      contentPadding: EdgeInsets.zero,
                     ),
-                    child: const Text('Ver ficha'),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: ListTile(
+                      leading: Icon(Icons.delete_outline_rounded),
+                      title: Text('Excluir'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
                   ),
                 ],
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: workout.days
+                          .map(
+                            (day) => Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: _DayPill(label: day.label, count: day.exerciseCount),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  onPressed: () => StartSessionFlow.fromWorkout(
+                    context,
+                    ref,
+                    workoutId: workout.id,
+                    workoutName: workout.name,
+                    days: daysOfSummary(workout),
+                  ),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 44),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                  label: const Text('Treinar'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Pastilha compacta de dia: rótulo + quantidade de exercícios.
+class _DayPill extends StatelessWidget {
+  const _DayPill({required this.label, required this.count});
+
+  final String label;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: tokens.surfaceSunken,
+        borderRadius: AppRadius.all(AppRadius.xs),
+        border: Border.all(color: tokens.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: AppTypography.display(size: 10, weight: FontWeight.w800, color: tokens.primary),
+          ),
+          const SizedBox(width: 5),
+          Text('$count', style: AppTypography.label(9.5, color: tokens.textMuted)),
+        ],
       ),
     );
   }

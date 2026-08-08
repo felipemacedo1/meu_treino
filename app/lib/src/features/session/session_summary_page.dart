@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/formatters.dart';
 import '../../core/router.dart';
-import '../../core/theme.dart';
 import '../../models/session.dart';
+import '../../theme/theme.dart';
 import '../../widgets/common.dart';
 
 /// Resumo mostrado logo depois de finalizar o treino.
@@ -16,9 +16,10 @@ class SessionSummaryPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Treino concluído'),
         automaticallyImplyLeading: false,
@@ -30,76 +31,88 @@ class SessionSummaryPage extends ConsumerWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
         children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: appGradient(theme.colorScheme),
-              borderRadius: BorderRadius.circular(24),
-            ),
+          BrandBanner(
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 40),
+                Row(
+                  children: [
+                    Icon(Icons.verified_rounded, color: tokens.onPrimary, size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      'SESSÃO REGISTRADA',
+                      style: AppTypography.label(11, color: tokens.onPrimary),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 14),
                 Text(
-                  'Boa! Treino registrado.',
-                  style: theme.textTheme.headlineSmall
-                      ?.copyWith(color: Colors.white, fontSize: 24),
+                  session.title.toUpperCase(),
+                  style: AppTypography.display(
+                    size: 21,
+                    weight: FontWeight.w800,
+                    color: tokens.onPrimary,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '${session.title} · ${formatDateTime(session.startedAt)}',
-                  style: const TextStyle(color: Colors.white70),
+                  formatDateTime(session.startedAt),
+                  style: AppTypography.label(
+                    10,
+                    color: tokens.onPrimary.withValues(alpha: 0.78),
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 1.6,
+            childAspectRatio: 1.72,
             children: [
               StatCard(
                 label: 'Duração',
                 value: formatDuration(session.durationSeconds),
                 icon: Icons.timer_outlined,
+                color: tokens.primary,
               ),
               StatCard(
                 label: 'Peso movimentado',
                 value: formatVolume(session.totalVolume),
-                icon: Icons.scale_rounded,
-                color: AppTheme.accent,
+                icon: Icons.speed_rounded,
+                color: tokens.chartColor(1),
               ),
               StatCard(
                 label: 'Séries concluídas',
                 value: '${session.totalSets}',
                 icon: Icons.repeat_rounded,
-                color: Colors.indigo,
+                color: tokens.secondary,
               ),
               StatCard(
                 label: 'Exercícios',
                 value: '${session.exercises.length}',
                 icon: Icons.fitness_center_rounded,
-                color: Colors.deepOrange,
+                color: tokens.accent,
               ),
             ],
           ),
           const SizedBox(height: 26),
           const SectionTitle('O que você fez'),
           ...session.exercises.map(
-            (exercise) => Card(
-              margin: const EdgeInsets.only(bottom: 10),
-              child: Padding(
-                padding: const EdgeInsets.all(14),
+            (exercise) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: AppPanel(
+                padding: const EdgeInsets.all(13),
                 child: Row(
                   children: [
-                    ExerciseImage(url: exercise.resolvedImageUrl, size: 46, radius: 12),
+                    ExerciseImage(url: exercise.resolvedImageUrl, size: 44),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -107,49 +120,43 @@ class SessionSummaryPage extends ConsumerWidget {
                         children: [
                           Text(
                             exercise.exerciseName,
-                            style: theme.textTheme.bodyLarge
-                                ?.copyWith(fontWeight: FontWeight.w600),
+                            style: context.texts.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 4),
                           Text(
                             exercise.sets
                                 .where((set) => set.completed)
-                                .map((set) =>
-                                    '${formatNumber(set.weight)}kg x ${set.reps ?? 0}')
-                                .join('  ·  '),
-                            style: theme.textTheme.bodySmall
-                                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                                .map((set) => '${formatNumber(set.weight)}×${set.reps ?? 0}')
+                                .join('   '),
+                            style: AppTypography.display(
+                              size: 11.5,
+                              weight: FontWeight.w600,
+                              color: tokens.textMuted,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    Text(formatVolume(exercise.volume), style: theme.textTheme.labelLarge),
+                    const SizedBox(width: 8),
+                    Text(
+                      formatVolume(exercise.volume),
+                      style: AppTypography.metric(15, color: tokens.primary),
+                    ),
                   ],
                 ),
               ),
             ),
           ),
           if (session.notes != null && session.notes!.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const Icon(Icons.sticky_note_2_outlined),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(session.notes!)),
-                  ],
-                ),
-              ),
-            ),
+            const SizedBox(height: 6),
+            InfoPanel(icon: Icons.sticky_note_2_outlined, text: session.notes!),
           ],
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: () => context.go(AppRoutes.home),
-            icon: const Icon(Icons.home_rounded),
+            icon: const Icon(Icons.grid_view_rounded, size: 18),
             label: const Text('Voltar ao início'),
           ),
         ],

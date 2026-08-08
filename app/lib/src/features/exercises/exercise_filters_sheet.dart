@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/exercise.dart';
 import '../../providers/app_providers.dart';
+import '../../theme/theme.dart';
 import '../../widgets/common.dart';
 
 /// Filtros de músculo, equipamento e categoria.
@@ -45,7 +46,10 @@ class _ExerciseFiltersSheetState extends ConsumerState<ExerciseFiltersSheet> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text('Filtros', style: Theme.of(context).textTheme.titleLarge),
+                      child: Text(
+                        'FILTROS',
+                        style: AppTypography.display(size: 16, weight: FontWeight.w700),
+                      ),
                     ),
                     TextButton(
                       onPressed: () => setState(() => _filter = ExerciseFilter(search: _filter.search)),

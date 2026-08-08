@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/formatters.dart';
-import '../../core/theme.dart';
 import '../../models/stats.dart';
+import '../../models/user.dart';
 import '../../providers/app_providers.dart';
+import '../../theme/theme.dart';
 import '../../widgets/common.dart';
 import '../history/history_page.dart';
 
@@ -19,7 +20,7 @@ class StatsPage extends ConsumerWidget {
     final groups = ref.watch(muscleGroupsProvider);
     final calendar = ref.watch(calendarProvider);
     final weights = ref.watch(bodyWeightsProvider);
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -36,6 +37,8 @@ class StatsPage extends ConsumerWidget {
         ],
       ),
       body: RefreshIndicator(
+        color: tokens.primary,
+        backgroundColor: tokens.surfaceElevated,
         onRefresh: () async {
           ref.invalidate(statsOverviewProvider);
           ref.invalidate(weeklyVolumeProvider);
@@ -44,115 +47,125 @@ class StatsPage extends ConsumerWidget {
           ref.invalidate(bodyWeightsProvider);
         },
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          padding: const EdgeInsets.fromLTRB(18, 6, 18, 32),
           children: [
             overview.when(
-              loading: () => const SizedBox(height: 180, child: LoadingView()),
-              error: (error, _) => ErrorView(message: '$error'),
-              data: (data) => Column(
+              loading: () => const PanelSkeleton(height: 190),
+              error: (error, _) => InlineError(message: '$error'),
+              data: (data) => GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.66,
                 children: [
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 1.5,
-                    children: [
-                      StatCard(
-                        label: 'Treinos realizados',
-                        value: '${data.totalSessions}',
-                        hint: '${data.workoutCount} fichas',
-                        icon: Icons.check_circle_outline_rounded,
-                      ),
-                      StatCard(
-                        label: 'Peso movimentado',
-                        value: formatVolume(data.totalVolume),
-                        icon: Icons.scale_rounded,
-                        color: AppTheme.accent,
-                      ),
-                      StatCard(
-                        label: 'Sequência atual',
-                        value: '${data.currentStreak} dia(s)',
-                        hint: 'recorde ${data.longestStreak}',
-                        icon: Icons.local_fire_department_rounded,
-                        color: Colors.deepOrange,
-                      ),
-                      StatCard(
-                        label: 'Tempo treinando',
-                        value: '${data.totalMinutes} min',
-                        hint: 'média ${data.avgSessionMinutes} min',
-                        icon: Icons.timer_outlined,
-                        color: Colors.indigo,
-                      ),
-                    ],
+                  StatCard(
+                    label: 'Treinos realizados',
+                    value: '${data.totalSessions}',
+                    hint: '${data.workoutCount} fichas',
+                    icon: Icons.check_circle_outline_rounded,
+                    color: tokens.primary,
+                  ),
+                  StatCard(
+                    label: 'Peso movimentado',
+                    value: formatVolume(data.totalVolume),
+                    icon: Icons.speed_rounded,
+                    color: tokens.chartColor(1),
+                  ),
+                  StatCard(
+                    label: 'Sequência atual',
+                    value: '${data.currentStreak}',
+                    hint: 'recorde ${data.longestStreak} dias',
+                    icon: Icons.local_fire_department_rounded,
+                    color: tokens.accent,
+                  ),
+                  StatCard(
+                    label: 'Tempo treinando',
+                    value: '${data.totalMinutes}',
+                    hint: 'média ${data.avgSessionMinutes} min/treino',
+                    icon: Icons.timer_outlined,
+                    color: tokens.secondary,
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 26),
-            const SectionTitle('Volume semanal', subtitle: 'Carga x repetições por semana'),
+            const SectionTitle('Volume semanal', subtitle: 'Carga × repetições por semana'),
             weekly.when(
-              loading: () => const SizedBox(height: 220, child: LoadingView()),
-              error: (error, _) => ErrorView(message: '$error'),
-              data: (data) => Card(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 20, 16, 10),
-                  child: SizedBox(height: 210, child: _WeeklyChart(data: data)),
-                ),
+              loading: () => const PanelSkeleton(height: 230),
+              error: (error, _) => InlineError(message: '$error'),
+              data: (data) => AppPanel(
+                padding: const EdgeInsets.fromLTRB(8, 18, 14, 8),
+                child: SizedBox(height: 210, child: _WeeklyChart(data: data)),
               ),
             ),
             const SizedBox(height: 26),
             const SectionTitle('Volume por grupo muscular', subtitle: 'Últimos 30 dias'),
             groups.when(
-              loading: () => const SizedBox(height: 140, child: LoadingView()),
-              error: (error, _) => ErrorView(message: '$error'),
+              loading: () => const PanelSkeleton(height: 150),
+              error: (error, _) => InlineError(message: '$error'),
               data: (data) {
                 if (data.isEmpty) {
-                  return _InfoCard(
+                  return const InfoPanel(
                     text: 'Complete um treino para ver a distribuição por grupo muscular.',
                   );
                 }
                 final max = data.map((e) => e.volume).reduce((a, b) => a > b ? a : b);
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(18),
-                    child: Column(
-                      children: data
-                          .map(
-                            (group) => Padding(
-                              padding: const EdgeInsets.only(bottom: 14),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(group.group,
-                                            style: theme.textTheme.bodyMedium),
-                                      ),
-                                      Text(
-                                        '${formatVolume(group.volume)} · ${group.sets} séries',
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: theme.colorScheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                    ],
+                return AppPanel(
+                  child: Column(
+                    children: List.generate(data.length, (index) {
+                      final group = data[index];
+                      final color = tokens.chartColor(index);
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: index == data.length - 1 ? 0 : 14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  height: 8,
+                                  width: 8,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    borderRadius: BorderRadius.circular(2),
                                   ),
-                                  const SizedBox(height: 6),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(6),
-                                    child: LinearProgressIndicator(
-                                      value: max == 0 ? 0 : group.volume / max,
-                                      minHeight: 8,
-                                    ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    group.group,
+                                    style: context.texts.bodyMedium
+                                        ?.copyWith(fontWeight: FontWeight.w600),
                                   ),
-                                ],
-                              ),
+                                ),
+                                Text(
+                                  formatVolume(group.volume),
+                                  style: AppTypography.display(
+                                    size: 12,
+                                    weight: FontWeight.w700,
+                                    color: tokens.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${group.sets} séries',
+                                  style: AppTypography.label(9, color: tokens.textMuted),
+                                ),
+                              ],
                             ),
-                          )
-                          .toList(),
-                    ),
+                            const SizedBox(height: 7),
+                            ProgressTrack(
+                              value: max == 0 ? 0 : group.volume / max,
+                              height: 6,
+                              color: color,
+                              glow: false,
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
                   ),
                 );
               },
@@ -160,100 +173,26 @@ class StatsPage extends ConsumerWidget {
             const SizedBox(height: 26),
             const SectionTitle('Frequência', subtitle: 'Últimas 17 semanas'),
             calendar.when(
-              loading: () => const SizedBox(height: 130, child: LoadingView()),
-              error: (error, _) => ErrorView(message: '$error'),
-              data: (data) => Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: _Heatmap(days: data),
-                ),
-              ),
+              loading: () => const PanelSkeleton(height: 150),
+              error: (error, _) => InlineError(message: '$error'),
+              data: (data) => AppPanel(child: _Heatmap(days: data)),
             ),
             const SizedBox(height: 26),
             const SectionTitle('Peso corporal'),
             weights.when(
-              loading: () => const SizedBox(height: 160, child: LoadingView()),
-              error: (error, _) => ErrorView(message: '$error'),
+              loading: () => const PanelSkeleton(height: 180),
+              error: (error, _) => InlineError(message: '$error'),
               data: (points) {
                 if (points.length < 2) {
-                  return _InfoCard(
-                    text:
-                        'Registre seu peso no perfil em dias diferentes para acompanhar a evolução.',
+                  return const InfoPanel(
+                    icon: Icons.monitor_weight_outlined,
+                    text: 'Registre seu peso no perfil em dias diferentes '
+                        'para acompanhar a evolução.',
                   );
                 }
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 20, 16, 10),
-                    child: SizedBox(
-                      height: 180,
-                      child: LineChart(
-                        LineChartData(
-                          gridData: FlGridData(
-                            show: true,
-                            drawVerticalLine: false,
-                            getDrawingHorizontalLine: (_) =>
-                                FlLine(color: theme.colorScheme.outlineVariant, strokeWidth: 1),
-                          ),
-                          borderData: FlBorderData(show: false),
-                          titlesData: FlTitlesData(
-                            topTitles:
-                                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            rightTitles:
-                                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            leftTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                reservedSize: 40,
-                                getTitlesWidget: (value, meta) => Text(
-                                  value.toStringAsFixed(0),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            bottomTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                reservedSize: 26,
-                                interval: (points.length / 4).ceilToDouble().clamp(1, 500),
-                                getTitlesWidget: (value, meta) {
-                                  final index = value.round();
-                                  if (index < 0 || index >= points.length) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  return Text(
-                                    formatDayMonth(points[index].date),
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                          lineBarsData: [
-                            LineChartBarData(
-                              spots: [
-                                for (var i = 0; i < points.length; i++)
-                                  FlSpot(i.toDouble(), points[i].weightKg),
-                              ],
-                              isCurved: true,
-                              color: AppTheme.accent,
-                              barWidth: 3,
-                              dotData: const FlDotData(show: true),
-                              belowBarData: BarAreaData(
-                                show: true,
-                                color: AppTheme.accent.withValues(alpha: 0.15),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                return AppPanel(
+                  padding: const EdgeInsets.fromLTRB(8, 18, 14, 8),
+                  child: SizedBox(height: 180, child: _BodyWeightChart(points: points)),
                 );
               },
             ),
@@ -264,6 +203,27 @@ class StatsPage extends ConsumerWidget {
   }
 }
 
+/// Eixos e grade compartilhados pelos gráficos, para manter a mesma leitura.
+class _ChartStyle {
+  const _ChartStyle(this.tokens);
+
+  final AppTokens tokens;
+
+  FlGridData grid() => FlGridData(
+        show: true,
+        drawVerticalLine: false,
+        getDrawingHorizontalLine: (_) => FlLine(color: tokens.border, strokeWidth: 1),
+      );
+
+  TextStyle get axisLabel => AppTypography.display(
+        size: 9,
+        weight: FontWeight.w600,
+        color: tokens.textMuted,
+      );
+
+  AxisTitles hidden() => const AxisTitles(sideTitles: SideTitles(showTitles: false));
+}
+
 class _WeeklyChart extends StatelessWidget {
   const _WeeklyChart({required this.data});
 
@@ -271,9 +231,10 @@ class _WeeklyChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = context.tokens;
+    final style = _ChartStyle(tokens);
     if (data.isEmpty) {
-      return const Center(child: Text('Sem dados ainda.'));
+      return Center(child: LabelText('Sem dados ainda', size: 10));
     }
     final maxVolume = data.map((e) => e.volume).fold<double>(0, (a, b) => a > b ? a : b);
 
@@ -281,32 +242,32 @@ class _WeeklyChart extends StatelessWidget {
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
         maxY: maxVolume == 0 ? 10 : maxVolume * 1.2,
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) => FlLine(color: scheme.outlineVariant, strokeWidth: 1),
-        ),
+        gridData: style.grid(),
         borderData: FlBorderData(show: false),
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
+            getTooltipColor: (_) => tokens.surfaceElevated,
+            tooltipBorderRadius: AppRadius.all(AppRadius.xs),
             getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem(
               '${formatVolume(rod.toY)}\n${data[group.x].sessions} treino(s)',
-              TextStyle(color: scheme.onInverseSurface, fontSize: 12),
+              AppTypography.body(size: 11.5, weight: FontWeight.w600, color: tokens.textPrimary),
             ),
           ),
         ),
         titlesData: FlTitlesData(
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: style.hidden(),
+          rightTitles: style.hidden(),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 46,
+              reservedSize: 42,
               getTitlesWidget: (value, meta) {
                 if (value == 0) return const SizedBox.shrink();
                 return Text(
-                  value >= 1000 ? '${(value / 1000).toStringAsFixed(0)}t' : value.toInt().toString(),
-                  style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
+                  value >= 1000
+                      ? '${(value / 1000).toStringAsFixed(0)}t'
+                      : value.toInt().toString(),
+                  style: style.axisLabel,
                 );
               },
             ),
@@ -314,16 +275,13 @@ class _WeeklyChart extends StatelessWidget {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 28,
+              reservedSize: 26,
               getTitlesWidget: (value, meta) {
                 final index = value.round();
                 if (index < 0 || index >= data.length) return const SizedBox.shrink();
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    formatDayMonth(data[index].weekStart),
-                    style: TextStyle(fontSize: 9, color: scheme.onSurfaceVariant),
-                  ),
+                  child: Text(formatDayMonth(data[index].weekStart), style: style.axisLabel),
                 );
               },
             ),
@@ -336,12 +294,15 @@ class _WeeklyChart extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: data[i].volume,
-                  width: 14,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                  width: 13,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: [scheme.primary.withValues(alpha: 0.6), scheme.primary],
+                    colors: [
+                      tokens.primary.withValues(alpha: 0.35),
+                      tokens.primary,
+                    ],
                   ),
                 ),
               ],
@@ -352,6 +313,96 @@ class _WeeklyChart extends StatelessWidget {
   }
 }
 
+class _BodyWeightChart extends StatelessWidget {
+  const _BodyWeightChart({required this.points});
+
+  final List<BodyWeightPoint> points;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    final style = _ChartStyle(tokens);
+    final line = tokens.chartColor(1);
+
+    // Com pouca variação de peso, rótulos inteiros repetiriam o mesmo número.
+    final values = points.map((p) => p.weightKg).toList();
+    final range = values.reduce((a, b) => a > b ? a : b) -
+        values.reduce((a, b) => a < b ? a : b);
+    final decimals = range < 5 ? 1 : 0;
+
+    return LineChart(
+      LineChartData(
+        gridData: style.grid(),
+        borderData: FlBorderData(show: false),
+        titlesData: FlTitlesData(
+          topTitles: style.hidden(),
+          rightTitles: style.hidden(),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 44,
+              getTitlesWidget: (value, meta) =>
+                  Text(value.toStringAsFixed(decimals), style: style.axisLabel),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 24,
+              interval: (points.length / 4).ceilToDouble().clamp(1, 500),
+              getTitlesWidget: (value, meta) {
+                final index = value.round();
+                if (index < 0 || index >= points.length) return const SizedBox.shrink();
+                return Text(formatDayMonth(points[index].date), style: style.axisLabel);
+              },
+            ),
+          ),
+        ),
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (_) => tokens.surfaceElevated,
+            tooltipBorderRadius: AppRadius.all(AppRadius.xs),
+            getTooltipItems: (spots) => spots
+                .map(
+                  (spot) => LineTooltipItem(
+                    '${formatNumber(spot.y)} kg',
+                    AppTypography.body(
+                      size: 11.5,
+                      weight: FontWeight.w600,
+                      color: tokens.textPrimary,
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: [
+              for (var i = 0; i < points.length; i++) FlSpot(i.toDouble(), points[i].weightKg),
+            ],
+            isCurved: true,
+            curveSmoothness: 0.25,
+            color: line,
+            barWidth: 3,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+                radius: 3.2,
+                color: line,
+                strokeWidth: 2,
+                strokeColor: tokens.surface,
+              ),
+            ),
+            belowBarData: BarAreaData(show: true, color: line.withValues(alpha: 0.14)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Mapa de frequência: uma coluna por semana, uma célula por dia.
 class _Heatmap extends StatelessWidget {
   const _Heatmap({required this.days});
 
@@ -359,7 +410,7 @@ class _Heatmap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = context.tokens;
     final byDay = <String, CalendarDay>{};
     for (final day in days) {
       byDay['${day.date.year}-${day.date.month}-${day.date.day}'] = day;
@@ -387,19 +438,31 @@ class _Heatmap extends StatelessWidget {
                     final key = '${date.year}-${date.month}-${date.day}';
                     final entry = byDay[key];
                     final future = date.isAfter(normalizedToday);
+                    final isToday = date == normalizedToday;
+
+                    Color color;
+                    if (future) {
+                      color = Colors.transparent;
+                    } else if (entry == null) {
+                      color = tokens.surfaceSunken;
+                    } else {
+                      color = tokens.primary
+                          .withValues(alpha: (0.45 + 0.2 * entry.sessions).clamp(0.4, 1.0));
+                    }
+
                     return Container(
                       width: 14,
                       height: 14,
                       margin: const EdgeInsets.only(bottom: 4),
                       decoration: BoxDecoration(
-                        color: future
-                            ? Colors.transparent
-                            : entry == null
-                                ? scheme.surfaceContainerHighest
-                                : scheme.primary.withValues(
-                                    alpha: (0.45 + 0.18 * entry.sessions).clamp(0.35, 1.0),
-                                  ),
-                        borderRadius: BorderRadius.circular(4),
+                        color: color,
+                        borderRadius: BorderRadius.circular(3),
+                        border: isToday
+                            ? Border.all(color: tokens.primary, width: 1.2)
+                            : (future ? null : Border.all(color: tokens.border)),
+                        boxShadow: entry != null
+                            ? AppEffects.glow(tokens.glow, strength: 0.22, blur: 6)
+                            : null,
                       ),
                     );
                   }),
@@ -408,55 +471,31 @@ class _Heatmap extends StatelessWidget {
             }),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         Row(
           children: [
-            Text(
-              'menos',
-              style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
-            ),
-            const SizedBox(width: 6),
+            LabelText('menos', size: 9),
+            const SizedBox(width: 7),
             ...List.generate(
               4,
               (index) => Container(
                 width: 12,
                 height: 12,
-                margin: const EdgeInsets.only(right: 3),
+                margin: const EdgeInsets.only(right: 4),
                 decoration: BoxDecoration(
                   color: index == 0
-                      ? scheme.surfaceContainerHighest
-                      : scheme.primary.withValues(alpha: 0.3 + index * 0.23),
+                      ? tokens.surfaceSunken
+                      : tokens.primary.withValues(alpha: 0.25 + index * 0.25),
                   borderRadius: BorderRadius.circular(3),
+                  border: Border.all(color: tokens.border),
                 ),
               ),
             ),
             const SizedBox(width: 3),
-            Text('mais', style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant)),
+            LabelText('mais', size: 9),
           ],
         ),
       ],
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Icon(Icons.insights_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
-            const SizedBox(width: 12),
-            Expanded(child: Text(text)),
-          ],
-        ),
-      ),
     );
   }
 }

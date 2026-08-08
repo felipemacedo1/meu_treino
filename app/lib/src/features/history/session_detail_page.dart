@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/formatters.dart';
 import '../../core/router.dart';
 import '../../providers/app_providers.dart';
+import '../../theme/theme.dart';
 import '../../widgets/common.dart';
 
 class SessionDetailPage extends ConsumerWidget {
@@ -15,9 +16,10 @@ class SessionDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionDetailProvider(sessionId));
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Treino realizado')),
       body: session.when(
         loading: () => const LoadingView(),
@@ -28,13 +30,17 @@ class SessionDetailPage extends ConsumerWidget {
         data: (data) => ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [
-            Text(data.title, style: theme.textTheme.headlineSmall?.copyWith(fontSize: 24)),
-            const SizedBox(height: 6),
             Text(
-              formatDateTime(data.startedAt),
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              data.title.toUpperCase(),
+              style: AppTypography.display(
+                size: 21,
+                weight: FontWeight.w800,
+                letterSpacing: -0.5,
+                color: tokens.textPrimary,
+              ),
             ),
+            const SizedBox(height: 6),
+            LabelText(formatDateTime(data.startedAt), size: 10),
             const SizedBox(height: 18),
             Row(
               children: [
@@ -43,6 +49,7 @@ class SessionDetailPage extends ConsumerWidget {
                     label: 'Duração',
                     value: formatDuration(data.durationSeconds),
                     icon: Icons.timer_outlined,
+                    color: tokens.primary,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -50,7 +57,8 @@ class SessionDetailPage extends ConsumerWidget {
                   child: StatCard(
                     label: 'Volume',
                     value: formatVolume(data.totalVolume),
-                    icon: Icons.scale_rounded,
+                    icon: Icons.speed_rounded,
+                    color: tokens.chartColor(1),
                   ),
                 ),
               ],
@@ -58,16 +66,17 @@ class SessionDetailPage extends ConsumerWidget {
             const SizedBox(height: 24),
             const SectionTitle('Exercícios'),
             ...data.exercises.map(
-              (exercise) => Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
+              (exercise) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: AppPanel(
+                  child: Padding(
+                    padding: EdgeInsets.zero,
+                    child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          ExerciseImage(url: exercise.resolvedImageUrl, size: 46, radius: 12),
+                          ExerciseImage(url: exercise.resolvedImageUrl, size: 44),
                           const SizedBox(width: 12),
                           Expanded(
                             child: InkWell(
@@ -75,14 +84,14 @@ class SessionDetailPage extends ConsumerWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(exercise.exerciseName, style: theme.textTheme.titleSmall),
+                                  Text(exercise.exerciseName, style: context.texts.titleSmall),
                                   if (exercise.substituted)
                                     Padding(
                                       padding: const EdgeInsets.only(top: 4),
                                       child: TagChip(
                                         'trocado · era ${exercise.originalExerciseName}',
                                         icon: Icons.swap_horiz_rounded,
-                                        color: Colors.orange.shade800,
+                                        color: tokens.warning,
                                       ),
                                     ),
                                 ],
@@ -98,16 +107,25 @@ class SessionDetailPage extends ConsumerWidget {
                         children: exercise.sets
                             .map(
                               (set) => Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
                                 decoration: BoxDecoration(
                                   color: set.completed
-                                      ? theme.colorScheme.primaryContainer
-                                      : theme.colorScheme.surfaceContainerHighest,
-                                  borderRadius: BorderRadius.circular(10),
+                                      ? tokens.primary.withValues(alpha: 0.12)
+                                      : tokens.surfaceSunken,
+                                  borderRadius: AppRadius.all(AppRadius.xs),
+                                  border: Border.all(
+                                    color: set.completed
+                                        ? tokens.primary.withValues(alpha: 0.35)
+                                        : tokens.border,
+                                  ),
                                 ),
                                 child: Text(
-                                  '${set.setNumber}: ${formatNumber(set.weight)}kg x ${set.reps ?? 0}',
-                                  style: theme.textTheme.labelMedium,
+                                  '${formatNumber(set.weight)}×${set.reps ?? 0}',
+                                  style: AppTypography.display(
+                                    size: 11,
+                                    weight: FontWeight.w700,
+                                    color: set.completed ? tokens.primary : tokens.textMuted,
+                                  ),
                                 ),
                               ),
                             )
@@ -118,9 +136,8 @@ class SessionDetailPage extends ConsumerWidget {
                           padding: const EdgeInsets.only(top: 12),
                           child: Text(
                             exercise.notes!,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontStyle: FontStyle.italic,
-                              color: theme.colorScheme.onSurfaceVariant,
+                            style: context.texts.bodySmall?.copyWith(
+                              color: tokens.textSecondary,
                             ),
                           ),
                         ),
@@ -129,20 +146,10 @@ class SessionDetailPage extends ConsumerWidget {
                 ),
               ),
             ),
+            ),
             if (data.notes != null && data.notes!.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.sticky_note_2_outlined),
-                      const SizedBox(width: 12),
-                      Expanded(child: Text(data.notes!)),
-                    ],
-                  ),
-                ),
-              ),
+              InfoPanel(icon: Icons.sticky_note_2_outlined, text: data.notes!),
             ],
           ],
         ),

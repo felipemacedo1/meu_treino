@@ -10,6 +10,7 @@ import '../../core/router.dart';
 import '../../models/exercise.dart';
 import '../../models/stats.dart';
 import '../../providers/app_providers.dart';
+import '../../theme/theme.dart';
 import '../../widgets/common.dart';
 
 class ExerciseDetailPage extends ConsumerWidget {
@@ -22,6 +23,7 @@ class ExerciseDetailPage extends ConsumerWidget {
     final detail = ref.watch(exerciseDetailProvider(exerciseId));
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Exercício')),
       body: detail.when(
         loading: () => const LoadingView(),
@@ -42,7 +44,7 @@ class _Content extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
     final images = exercise.resolvedImages;
     final videos = exercise.resolvedVideos;
     final progression = ref.watch(exerciseProgressionProvider(exercise.id));
@@ -56,25 +58,30 @@ class _Content extends ConsumerWidget {
           Container(
             height: 180,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(22),
+              color: tokens.surface,
+              borderRadius: AppRadius.all(AppRadius.lg),
+              border: Border.all(color: tokens.border),
             ),
             child: Icon(
               Icons.fitness_center_rounded,
-              size: 64,
-              color: theme.colorScheme.onPrimaryContainer,
+              size: 56,
+              color: tokens.primary.withValues(alpha: 0.4),
             ),
           ),
         const SizedBox(height: 20),
-        Text(exercise.name, style: theme.textTheme.headlineSmall?.copyWith(fontSize: 24)),
+        Text(
+          exercise.name.toUpperCase(),
+          style: AppTypography.display(
+            size: 21,
+            weight: FontWeight.w800,
+            letterSpacing: -0.5,
+            color: tokens.textPrimary,
+          ),
+        ),
         if (exercise.name != exercise.originalName)
           Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              exercise.originalName,
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-            ),
+            child: LabelText(exercise.originalName, size: 9.5),
           ),
         const SizedBox(height: 14),
         Wrap(
@@ -82,9 +89,17 @@ class _Content extends ConsumerWidget {
           runSpacing: 8,
           children: [
             if (exercise.categoryName != null)
-              TagChip(exercise.categoryName!, icon: Icons.category_rounded),
+              TagChip(
+                exercise.categoryName!,
+                icon: Icons.category_rounded,
+                color: tokens.primary,
+              ),
             ...exercise.equipment.map(
-              (item) => TagChip(item.name, icon: Icons.fitness_center_rounded, color: Colors.teal),
+              (item) => TagChip(
+                item.name,
+                icon: Icons.fitness_center_rounded,
+                color: tokens.secondary,
+              ),
             ),
           ],
         ),
@@ -118,13 +133,12 @@ class _Content extends ConsumerWidget {
         if (exercise.description != null && exercise.description!.trim().isNotEmpty) ...[
           const SizedBox(height: 24),
           const SectionTitle('Execução'),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Text(
-                exercise.description!,
-                style: theme.textTheme.bodyMedium?.copyWith(height: 1.55),
-              ),
+          AppPanel(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              exercise.description!,
+              style: context.texts.bodyMedium
+                  ?.copyWith(height: 1.6, color: tokens.textSecondary),
             ),
           ),
         ],
@@ -132,24 +146,12 @@ class _Content extends ConsumerWidget {
         const SectionTitle('Sua evolução neste exercício'),
         progression.when(
           loading: () => const SizedBox(height: 120, child: LoadingView()),
-          error: (error, _) => Card(
-            child: Padding(padding: const EdgeInsets.all(18), child: Text('$error')),
-          ),
+          error: (error, _) => InlineError(message: '$error'),
           data: (data) {
             if (data.points.isEmpty) {
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      Icon(Icons.show_chart_rounded, color: theme.colorScheme.onSurfaceVariant),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text('Faça esse exercício em um treino para ver a evolução aqui.'),
-                      ),
-                    ],
-                  ),
-                ),
+              return const InfoPanel(
+                icon: Icons.show_chart_rounded,
+                text: 'Faça esse exercício em um treino para ver a evolução aqui.',
               );
             }
             return Column(
@@ -161,7 +163,7 @@ class _Content extends ConsumerWidget {
                         label: 'Melhor carga',
                         value: formatWeight(data.bestWeight),
                         icon: Icons.emoji_events_rounded,
-                        color: Colors.amber.shade800,
+                        color: tokens.accent,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -176,14 +178,9 @@ class _Content extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 20, 18, 8),
-                    child: SizedBox(
-                      height: 200,
-                      child: _ProgressionChart(points: data.points),
-                    ),
-                  ),
+                AppPanel(
+                  padding: const EdgeInsets.fromLTRB(6, 18, 16, 6),
+                  child: SizedBox(height: 200, child: _ProgressionChart(points: data.points)),
                 ),
               ],
             );
@@ -221,24 +218,39 @@ class _ImageCarouselState extends State<_ImageCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = context.tokens;
     return Column(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(22),
-          child: Container(
+        Container(
+          height: 260,
+          decoration: BoxDecoration(
+            color: tokens.surface,
+            borderRadius: AppRadius.all(AppRadius.lg),
+            border: Border.all(color: tokens.border),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: SizedBox(
             height: 260,
-            color: Colors.white,
             child: PageView.builder(
               controller: _controller,
               itemCount: widget.images.length,
               onPageChanged: (index) => setState(() => _index = index),
-              itemBuilder: (context, index) => CachedNetworkImage(
-                imageUrl: widget.images[index],
-                fit: BoxFit.contain,
-                placeholder: (_, __) => const Center(child: CircularProgressIndicator()),
-                errorWidget: (_, __, ___) =>
-                    const Center(child: Icon(Icons.broken_image_outlined, size: 40)),
+              itemBuilder: (context, index) => Container(
+                color: tokens.textPrimary,
+                child: CachedNetworkImage(
+                  imageUrl: widget.images[index],
+                  fit: BoxFit.contain,
+                  placeholder: (_, _) => Center(
+                    child: CircularProgressIndicator(strokeWidth: 2, color: tokens.primary),
+                  ),
+                  errorWidget: (_, _, _) => Center(
+                    child: Icon(
+                      Icons.broken_image_outlined,
+                      size: 36,
+                      color: tokens.textMuted,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -255,7 +267,7 @@ class _ImageCarouselState extends State<_ImageCarousel> {
                   height: 7,
                   margin: const EdgeInsets.symmetric(horizontal: 3),
                   decoration: BoxDecoration(
-                    color: _index == index ? scheme.primary : scheme.outlineVariant,
+                    color: _index == index ? tokens.primary : tokens.borderStrong,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -276,23 +288,20 @@ class _MuscleGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
     if (muscles.isEmpty) {
       return Text(
         'Sem informação de músculos ${primary ? 'principais' : 'auxiliares'}.',
-        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+        style: context.texts.bodySmall?.copyWith(color: tokens.textMuted),
       );
     }
-    return Card(
+    return AppPanel(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-            ),
+            LabelText(title, size: 9.5),
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
@@ -302,7 +311,7 @@ class _MuscleGroup extends StatelessWidget {
                     (muscle) => TagChip(
                       muscle.name,
                       icon: primary ? Icons.bolt_rounded : Icons.circle_outlined,
-                      color: primary ? theme.colorScheme.primary : Colors.blueGrey,
+                      color: primary ? tokens.primary : tokens.textMuted,
                     ),
                   )
                   .toList(),
@@ -321,7 +330,7 @@ class _ProgressionChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = context.tokens;
     final spots = <FlSpot>[];
     for (var i = 0; i < points.length; i++) {
       final weight = points[i].topWeight;
@@ -336,7 +345,7 @@ class _ProgressionChart extends StatelessWidget {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) => FlLine(color: scheme.outlineVariant, strokeWidth: 1),
+          getDrawingHorizontalLine: (_) => FlLine(color: tokens.border, strokeWidth: 1),
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
@@ -348,7 +357,7 @@ class _ProgressionChart extends StatelessWidget {
               reservedSize: 44,
               getTitlesWidget: (value, meta) => Text(
                 '${value.toInt()}',
-                style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
+                style: AppTypography.display(size: 9.5, weight: FontWeight.w600, color: tokens.textMuted),
               ),
             ),
           ),
@@ -364,7 +373,7 @@ class _ProgressionChart extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     formatDayMonth(points[index].date),
-                    style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
+                    style: AppTypography.display(size: 9.5, weight: FontWeight.w600, color: tokens.textMuted),
                   ),
                 );
               },
@@ -376,20 +385,20 @@ class _ProgressionChart extends StatelessWidget {
             spots: spots,
             isCurved: true,
             curveSmoothness: 0.25,
-            color: scheme.primary,
+            color: tokens.primary,
             barWidth: 3,
             dotData: FlDotData(
               show: true,
               getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
                 radius: 3.5,
-                color: scheme.primary,
+                color: tokens.primary,
                 strokeWidth: 2,
-                strokeColor: scheme.surface,
+                strokeColor: tokens.surface,
               ),
             ),
             belowBarData: BarAreaData(
               show: true,
-              color: scheme.primary.withValues(alpha: 0.14),
+              color: tokens.primary.withValues(alpha: 0.16),
             ),
           ),
         ],

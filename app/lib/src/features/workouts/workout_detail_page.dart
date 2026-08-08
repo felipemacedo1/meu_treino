@@ -6,6 +6,7 @@ import '../../core/formatters.dart';
 import '../../core/router.dart';
 import '../../models/workout.dart';
 import '../../providers/app_providers.dart';
+import '../../theme/theme.dart';
 import '../../widgets/common.dart';
 import '../session/start_session.dart';
 
@@ -19,6 +20,7 @@ class WorkoutDetailPage extends ConsumerWidget {
     final workout = ref.watch(workoutDetailProvider(workoutId));
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Ficha de treino'),
         actions: [
@@ -63,20 +65,34 @@ class _Content extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
 
     return RefreshIndicator(
+      color: tokens.primary,
+      backgroundColor: tokens.surfaceElevated,
       onRefresh: () async => ref.invalidate(workoutDetailProvider(workout.id)),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
-          Text(workout.name, style: theme.textTheme.headlineSmall?.copyWith(fontSize: 26)),
-          const SizedBox(height: 8),
+          Text(
+            workout.name.toUpperCase(),
+            style: AppTypography.display(
+              size: 23,
+              weight: FontWeight.w800,
+              letterSpacing: -0.6,
+              color: tokens.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              TagChip(splitLabel(workout.splitType), icon: Icons.calendar_view_week_rounded),
+              TagChip(
+                splitLabel(workout.splitType),
+                icon: Icons.calendar_view_week_rounded,
+                color: tokens.primary,
+              ),
               TagChip('${workout.days.length} dias', icon: Icons.today_rounded),
               TagChip('${workout.exerciseCount} exercícios', icon: Icons.fitness_center_rounded),
             ],
@@ -85,8 +101,7 @@ class _Content extends ConsumerWidget {
             const SizedBox(height: 14),
             Text(
               workout.notes!,
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              style: context.texts.bodyMedium?.copyWith(color: tokens.textSecondary),
             ),
           ],
           const SizedBox(height: 20),
@@ -117,44 +132,27 @@ class _DayCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: AppPanel(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Container(
-                  height: 38,
-                  width: 38,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    day.label,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: day.label.length > 2 ? 10 : 15,
-                    ),
-                  ),
-                ),
+                DayBadge(label: day.label),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(day.name, style: theme.textTheme.titleSmall),
+                      Text(day.name, style: context.texts.titleSmall),
                       Text(
                         '${day.exercises.length} exercícios · ${day.totalSets} séries',
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        style: context.texts.bodySmall?.copyWith(color: tokens.textMuted),
                       ),
                     ],
                   ),
@@ -185,8 +183,7 @@ class _DayCard extends ConsumerWidget {
                 padding: const EdgeInsets.only(top: 16),
                 child: Text(
                   'Nenhum exercício neste dia ainda.',
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: context.texts.bodySmall?.copyWith(color: tokens.textMuted),
                 ),
               )
             else ...[
@@ -200,7 +197,7 @@ class _DayCard extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Row(
                       children: [
-                        ExerciseImage(url: exercise.resolvedImageUrl, size: 48, radius: 12),
+                        ExerciseImage(url: exercise.resolvedImageUrl, size: 46),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -208,7 +205,7 @@ class _DayCard extends ConsumerWidget {
                             children: [
                               Text(
                                 exercise.exerciseName,
-                                style: theme.textTheme.bodyLarge
+                                style: context.texts.bodyLarge
                                     ?.copyWith(fontWeight: FontWeight.w600),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -216,8 +213,8 @@ class _DayCard extends ConsumerWidget {
                               const SizedBox(height: 3),
                               Text(
                                 '${exercise.targetSets} x ${exercise.targetReps} · descanso ${formatRest(exercise.restSeconds)}',
-                                style: theme.textTheme.bodySmall
-                                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                                style: context.texts.bodySmall
+                                    ?.copyWith(color: tokens.textMuted, fontSize: 12),
                               ),
                               if (exercise.lastWeight != null || exercise.bestWeight != null)
                                 Padding(
@@ -234,7 +231,7 @@ class _DayCard extends ConsumerWidget {
                                         TagChip(
                                           'recorde ${formatWeight(exercise.bestWeight)}',
                                           icon: Icons.emoji_events_rounded,
-                                          color: Colors.amber.shade800,
+                                          color: tokens.accent,
                                         ),
                                     ],
                                   ),
@@ -242,10 +239,7 @@ class _DayCard extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                        Icon(Icons.chevron_right_rounded, color: tokens.textMuted, size: 20),
                       ],
                     ),
                   ),

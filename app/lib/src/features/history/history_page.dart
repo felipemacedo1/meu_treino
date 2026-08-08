@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/formatters.dart';
 import '../../core/router.dart';
 import '../../providers/app_providers.dart';
+import '../../theme/theme.dart';
 import '../../widgets/common.dart';
 
 class HistoryPage extends ConsumerStatefulWidget {
@@ -38,7 +39,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     final history = ref.watch(historyProvider);
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
 
     final body = history.when(
       loading: () => const LoadingView(),
@@ -67,31 +68,53 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
               );
             }
             final session = paged.items[index];
-            return Card(
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                onTap: () => context.push(AppRoutes.sessionDetail(session.id)),
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
+            return AppPanel(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+              onTap: () => context.push(AppRoutes.sessionDetail(session.id)),
+              child: Row(
+                children: [
+                  DayBadge(label: session.dayLabel ?? 'L', size: 40),
+                  const SizedBox(width: 13),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          session.dayName ?? session.workoutName ?? 'Treino',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.texts.titleSmall,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          formatDateTime(session.startedAt),
+                          style: context.texts.bodySmall
+                              ?.copyWith(color: tokens.textMuted, fontSize: 11.5),
+                        ),
+                        const SizedBox(height: 7),
+                        Row(
+                          children: [
+                            _HistoryMetric(
+                              icon: Icons.speed_rounded,
+                              value: formatVolume(session.totalVolume),
+                            ),
+                            const SizedBox(width: 12),
+                            _HistoryMetric(
+                              icon: Icons.repeat_rounded,
+                              value: '${session.totalSets}',
+                            ),
+                            const SizedBox(width: 12),
+                            _HistoryMetric(
+                              icon: Icons.schedule_rounded,
+                              value: formatDuration(session.durationSeconds),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Icon(
-                    Icons.fitness_center_rounded,
-                    color: theme.colorScheme.onPrimaryContainer,
-                  ),
-                ),
-                title: Text(session.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    '${formatDateTime(session.startedAt)}\n'
-                    '${formatVolume(session.totalVolume)} · ${session.totalSets} séries · ${formatDuration(session.durationSeconds)}',
-                  ),
-                ),
-                isThreeLine: true,
-                trailing: const Icon(Icons.chevron_right_rounded),
+                  Icon(Icons.chevron_right_rounded, color: tokens.textMuted, size: 20),
+                ],
               ),
             );
           },
@@ -106,7 +129,12 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
             child: Row(
               children: [
-                Expanded(child: Text('Histórico', style: theme.textTheme.titleLarge)),
+                Expanded(
+                  child: Text(
+                    'HISTÓRICO',
+                    style: AppTypography.display(size: 16, weight: FontWeight.w700),
+                  ),
+                ),
                 IconButton(
                   onPressed: () => Navigator.maybePop(context),
                   icon: const Icon(Icons.close_rounded),
@@ -120,8 +148,37 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Histórico')),
       body: body,
+    );
+  }
+}
+
+/// Métrica compacta usada nos cartões do histórico.
+class _HistoryMetric extends StatelessWidget {
+  const _HistoryMetric({required this.icon, required this.value});
+
+  final IconData icon;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12, color: tokens.textMuted),
+        const SizedBox(width: 4),
+        Text(
+          value,
+          style: AppTypography.display(
+            size: 11,
+            weight: FontWeight.w700,
+            color: tokens.textSecondary,
+          ),
+        ),
+      ],
     );
   }
 }

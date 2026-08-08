@@ -6,6 +6,7 @@ import '../../core/api_client.dart';
 import '../../core/router.dart';
 import '../../models/workout.dart';
 import '../../providers/app_providers.dart';
+import '../../theme/theme.dart';
 import '../../widgets/common.dart';
 
 /// Fluxo de inicio de treino, compartilhado pelo dashboard e pela lista de treinos.
@@ -26,56 +27,55 @@ class StartSessionFlow {
     }
 
     int? dayId = days.length == 1 ? days.first.id : null;
-    if (dayId == null) {
-      dayId = await showModalBottomSheet<int>(
-        context: context,
-        builder: (context) => SafeArea(
+    dayId ??= await showModalBottomSheet<int>(
+      context: context,
+      builder: (context) {
+        final tokens = context.tokens;
+        return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Qual treino de hoje?',
-                        style: Theme.of(context).textTheme.titleLarge),
-                    const SizedBox(height: 2),
-                    Text(
-                      workoutName,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                    ),
-                  ],
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
+                child: SectionTitle('Qual treino de hoje?', subtitle: workoutName),
               ),
               ...days.map(
-                (day) => ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                    child: Text(
-                      day.label,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: day.label.length > 2 ? 11 : 15,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      ),
+                (day) => Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: AppPanel(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    onTap: () => Navigator.pop(context, day.id),
+                    child: Row(
+                      children: [
+                        DayBadge(label: day.label, size: 40),
+                        const SizedBox(width: 13),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(day.name, style: context.texts.titleSmall),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${day.exerciseCount} exercícios',
+                                style: context.texts.bodySmall
+                                    ?.copyWith(color: tokens.textMuted, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.play_arrow_rounded, color: tokens.primary, size: 22),
+                      ],
                     ),
                   ),
-                  title: Text(day.name),
-                  subtitle: Text('${day.exerciseCount} exercícios'),
-                  trailing: const Icon(Icons.play_arrow_rounded),
-                  onTap: () => Navigator.pop(context, day.id),
                 ),
               ),
               const SizedBox(height: 12),
             ],
           ),
-        ),
-      );
-    }
+        );
+      },
+    );
 
     if (dayId == null || !context.mounted) return;
     await _start(context, ref, workoutId: workoutId, workoutDayId: dayId);
@@ -105,16 +105,21 @@ class StartSessionFlow {
         final resume = await showDialog<String>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Treino em andamento'),
+            title: Text(
+              'TREINO EM ANDAMENTO',
+              style: AppTypography.display(size: 16, weight: FontWeight.w700),
+            ),
             content: const Text(
               'Você já tem um treino aberto. Quer continuar de onde parou ou começar este novo?',
             ),
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, 'new'),
                 child: const Text('Começar novo'),
               ),
               FilledButton(
+                style: FilledButton.styleFrom(minimumSize: const Size(0, 46)),
                 onPressed: () => Navigator.pop(context, 'resume'),
                 child: const Text('Continuar'),
               ),

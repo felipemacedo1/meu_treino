@@ -49,6 +49,7 @@ class UserProfile {
     this.availableDays,
     this.sessionMinutes,
     this.weeklyGoal,
+    this.theme,
     this.bmi,
   });
 
@@ -64,6 +65,9 @@ class UserProfile {
   final int? availableDays;
   final int? sessionMinutes;
   final int? weeklyGoal;
+
+  /// Identificador do tema visual escolhido (ver AppThemes).
+  final String? theme;
   final double? bmi;
 
   bool get isComplete => weightKg != null && heightCm != null && goal != null && experience != null;
@@ -81,6 +85,7 @@ class UserProfile {
         availableDays: asIntOrNull(json['availableDays']),
         sessionMinutes: asIntOrNull(json['sessionMinutes']),
         weeklyGoal: asIntOrNull(json['weeklyGoal']),
+        theme: asStringOrNull(json['theme']),
         bmi: asDoubleOrNull(json['bmi']),
       );
 }

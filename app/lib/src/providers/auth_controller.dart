@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/user.dart';
@@ -78,31 +78,3 @@ class AuthController extends Notifier<AuthState> {
 
 final authControllerProvider =
     NotifierProvider<AuthController, AuthState>(AuthController.new);
-
-// ------------------------------ tema ---------------------------------------
-
-class ThemeController extends Notifier<ThemeMode> {
-  @override
-  ThemeMode build() => _parse(ref.watch(storageProvider).themeMode);
-
-  static ThemeMode _parse(String value) => switch (value) {
-        'light' => ThemeMode.light,
-        'dark' => ThemeMode.dark,
-        _ => ThemeMode.system,
-      };
-
-  Future<void> set(ThemeMode mode) async {
-    final name = switch (mode) {
-      ThemeMode.light => 'light',
-      ThemeMode.dark => 'dark',
-      ThemeMode.system => 'system',
-    };
-    await ref.read(storageProvider).saveThemeMode(name);
-    state = mode;
-  }
-
-  Future<void> toggle() =>
-      set(state == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark);
-}
-
-final themeControllerProvider = NotifierProvider<ThemeController, ThemeMode>(ThemeController.new);

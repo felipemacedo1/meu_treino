@@ -9,7 +9,9 @@ import '../../models/user.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/auth_controller.dart';
 import '../../providers/providers.dart';
+import '../../theme/theme.dart';
 import '../../widgets/common.dart';
+import 'theme_picker.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -18,8 +20,7 @@ class ProfilePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileProvider);
     final auth = ref.watch(authControllerProvider);
-    final themeMode = ref.watch(themeControllerProvider);
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -31,46 +32,69 @@ class ProfilePage extends ConsumerWidget {
           onRetry: () => ref.invalidate(profileProvider),
         ),
         data: (data) => ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          padding: const EdgeInsets.fromLTRB(18, 6, 18, 32),
           children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: theme.colorScheme.primaryContainer,
-                  child: Text(
-                    auth.user?.initials ?? '?',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: theme.colorScheme.onPrimaryContainer,
+            AppPanel(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    height: 56,
+                    width: 56,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: tokens.primary.withValues(alpha: 0.12),
+                      borderRadius: AppRadius.all(AppRadius.sm),
+                      border: Border.all(color: tokens.primary.withValues(alpha: 0.5)),
+                    ),
+                    child: Text(
+                      auth.user?.initials ?? '?',
+                      style: AppTypography.display(
+                        size: 19,
+                        weight: FontWeight.w800,
+                        color: tokens.primary,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(data.name, style: theme.textTheme.titleLarge),
-                      Text(
-                        data.email,
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                      ),
-                    ],
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          data.name.toUpperCase(),
+                          style: AppTypography.display(
+                            size: 16,
+                            weight: FontWeight.w800,
+                            color: tokens.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          data.email,
+                          style: context.texts.bodySmall
+                              ?.copyWith(color: tokens.textMuted, fontSize: 12),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
                   child: StatCard(
                     label: 'Peso atual',
-                    value: data.weightKg == null ? '--' : formatWeight(data.weightKg),
+                    value: data.weightKg == null ? '--' : formatNumber(data.weightKg),
+                    hint: data.weightKg == null ? null : 'kg',
                     icon: Icons.monitor_weight_outlined,
+                    color: tokens.primary,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -80,12 +104,15 @@ class ProfilePage extends ConsumerWidget {
                     value: data.bmi == null ? '--' : formatNumber(data.bmi),
                     hint: data.heightCm == null ? null : '${data.heightCm} cm',
                     icon: Icons.straighten_rounded,
+                    color: tokens.chartColor(1),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            Card(
+            const SectionTitle('Dados de treino'),
+            AppPanel(
+              padding: EdgeInsets.zero,
               child: Column(
                 children: [
                   _InfoRow(
@@ -93,25 +120,25 @@ class ProfilePage extends ConsumerWidget {
                     label: 'Objetivo',
                     value: goalLabel(data.goal),
                   ),
-                  const Divider(height: 1),
+                  _Separator(),
                   _InfoRow(
                     icon: Icons.military_tech_rounded,
                     label: 'Experiência',
                     value: experienceLabel(data.experience),
                   ),
-                  const Divider(height: 1),
+                  _Separator(),
                   _InfoRow(
                     icon: Icons.calendar_month_rounded,
                     label: 'Dias disponíveis',
-                    value: data.availableDays == null ? '--' : '${data.availableDays} por semana',
+                    value: data.availableDays == null ? '--' : '${data.availableDays}/semana',
                   ),
-                  const Divider(height: 1),
+                  _Separator(),
                   _InfoRow(
                     icon: Icons.timer_outlined,
                     label: 'Tempo por treino',
                     value: data.sessionMinutes == null ? '--' : '${data.sessionMinutes} min',
                   ),
-                  const Divider(height: 1),
+                  _Separator(),
                   _InfoRow(
                     icon: Icons.emoji_events_outlined,
                     label: 'Meta semanal',
@@ -120,60 +147,37 @@ class ProfilePage extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
-                  child: FilledButton.tonalIcon(
+                  child: OutlinedButton.icon(
                     onPressed: () => _editProfile(context, ref, data),
-                    icon: const Icon(Icons.edit_rounded),
-                    label: const Text('Editar perfil'),
+                    icon: const Icon(Icons.edit_rounded, size: 17),
+                    label: const Text('Editar'),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _logWeight(context, ref),
-                    icon: const Icon(Icons.add_rounded),
+                    icon: const Icon(Icons.add_rounded, size: 17),
                     label: const Text('Novo peso'),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 26),
-            const SectionTitle('Aparência'),
-            Card(
-              child: Column(
-                children: [
-                  RadioListTile<ThemeMode>(
-                    value: ThemeMode.system,
-                    groupValue: themeMode,
-                    onChanged: (mode) =>
-                        ref.read(themeControllerProvider.notifier).set(mode ?? ThemeMode.system),
-                    title: const Text('Seguir o sistema'),
-                  ),
-                  RadioListTile<ThemeMode>(
-                    value: ThemeMode.light,
-                    groupValue: themeMode,
-                    onChanged: (mode) =>
-                        ref.read(themeControllerProvider.notifier).set(mode ?? ThemeMode.light),
-                    title: const Text('Tema claro'),
-                  ),
-                  RadioListTile<ThemeMode>(
-                    value: ThemeMode.dark,
-                    groupValue: themeMode,
-                    onChanged: (mode) =>
-                        ref.read(themeControllerProvider.notifier).set(mode ?? ThemeMode.dark),
-                    title: const Text('Tema escuro'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 26),
+            const SizedBox(height: 28),
+            const AppearanceSection(),
+            const SizedBox(height: 28),
             const SectionTitle('Catálogo de exercícios'),
             const _CatalogCard(),
-            const SizedBox(height: 26),
+            const SizedBox(height: 24),
             OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: tokens.error,
+                side: BorderSide(color: tokens.error.withValues(alpha: 0.45)),
+              ),
               onPressed: () async {
                 final confirmed = await confirmDialog(
                   context,
@@ -186,17 +190,11 @@ class ProfilePage extends ConsumerWidget {
                 await ref.read(authControllerProvider.notifier).logout();
                 if (context.mounted) context.go(AppRoutes.login);
               },
-              icon: const Icon(Icons.logout_rounded),
+              icon: const Icon(Icons.logout_rounded, size: 17),
               label: const Text('Sair da conta'),
             ),
             const SizedBox(height: 20),
-            Center(
-              child: Text(
-                'Meu Treino · API ${Env.apiBaseUrl}',
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              ),
-            ),
+            Center(child: LabelText('Meu Treino · ${Env.apiBaseUrl}', size: 9)),
           ],
         ),
       ),
@@ -230,16 +228,21 @@ class ProfilePage extends ConsumerWidget {
     final value = await showDialog<double>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Registrar peso'),
+        title: Text(
+          'REGISTRAR PESO',
+          style: AppTypography.display(size: 16, weight: FontWeight.w700),
+        ),
         content: TextField(
           controller: controller,
           autofocus: true,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: const InputDecoration(labelText: 'Peso', suffixText: 'kg'),
         ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
           FilledButton(
+            style: FilledButton.styleFrom(minimumSize: const Size(0, 46)),
             onPressed: () => Navigator.pop(
               context,
               double.tryParse(controller.text.replaceAll(',', '.')),
@@ -261,6 +264,13 @@ class ProfilePage extends ConsumerWidget {
   }
 }
 
+class _Separator extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(height: 1, color: context.tokens.border);
+  }
+}
+
 class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.icon, required this.label, required this.value});
 
@@ -270,15 +280,22 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 14),
-          Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
-          Text(value, style: theme.textTheme.labelLarge),
+          Icon(icon, size: 17, color: tokens.textMuted),
+          const SizedBox(width: 12),
+          Expanded(child: Text(label, style: context.texts.bodyMedium)),
+          Text(
+            value,
+            style: AppTypography.display(
+              size: 12,
+              weight: FontWeight.w700,
+              color: tokens.textPrimary,
+            ),
+          ),
         ],
       ),
     );
@@ -320,20 +337,18 @@ class _ProfileFormState extends State<_ProfileForm> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Editar perfil', style: theme.textTheme.titleLarge),
-            const SizedBox(height: 20),
+            const SectionTitle('Editar perfil'),
             TextField(
               controller: _name,
               decoration: const InputDecoration(labelText: 'Nome'),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
@@ -353,8 +368,8 @@ class _ProfileFormState extends State<_ProfileForm> {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            Text('Objetivo', style: theme.textTheme.labelLarge),
+            const SizedBox(height: 22),
+            const LabelText('Objetivo', size: 10),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -370,7 +385,7 @@ class _ProfileFormState extends State<_ProfileForm> {
                   .toList(),
             ),
             const SizedBox(height: 20),
-            Text('Experiência', style: theme.textTheme.labelLarge),
+            const LabelText('Experiência', size: 10),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -386,29 +401,30 @@ class _ProfileFormState extends State<_ProfileForm> {
                   .toList(),
             ),
             const SizedBox(height: 20),
-            Text('Dias disponíveis: $_availableDays', style: theme.textTheme.labelLarge),
-            Slider(
-              value: _availableDays.toDouble(),
+            _SliderField(
+              label: 'Dias disponíveis',
+              value: _availableDays,
+              suffix: _availableDays == 1 ? 'dia' : 'dias',
               min: 1,
               max: 7,
-              divisions: 6,
-              onChanged: (value) => setState(() => _availableDays = value.round()),
+              onChanged: (value) => setState(() => _availableDays = value),
             ),
-            Text('Meta semanal: $_weeklyGoal treinos', style: theme.textTheme.labelLarge),
-            Slider(
-              value: _weeklyGoal.toDouble(),
+            _SliderField(
+              label: 'Meta semanal',
+              value: _weeklyGoal,
+              suffix: 'treinos',
               min: 1,
               max: 7,
-              divisions: 6,
-              onChanged: (value) => setState(() => _weeklyGoal = value.round()),
+              onChanged: (value) => setState(() => _weeklyGoal = value),
             ),
-            Text('Tempo por treino: $_sessionMinutes min', style: theme.textTheme.labelLarge),
-            Slider(
-              value: _sessionMinutes.toDouble(),
+            _SliderField(
+              label: 'Tempo por treino',
+              value: _sessionMinutes,
+              suffix: 'min',
               min: 20,
               max: 150,
               divisions: 13,
-              onChanged: (value) => setState(() => _sessionMinutes = value.round()),
+              onChanged: (value) => setState(() => _sessionMinutes = value),
             ),
             const SizedBox(height: 20),
             FilledButton(
@@ -431,6 +447,55 @@ class _ProfileFormState extends State<_ProfileForm> {
   }
 }
 
+/// Slider com rótulo e valor em destaque, no padrão do design system.
+class _SliderField extends StatelessWidget {
+  const _SliderField({
+    required this.label,
+    required this.value,
+    required this.suffix,
+    required this.min,
+    required this.max,
+    required this.onChanged,
+    this.divisions,
+  });
+
+  final String label;
+  final int value;
+  final String suffix;
+  final int min;
+  final int max;
+  final int? divisions;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(child: LabelText(label, size: 10)),
+            Text(
+              '$value',
+              style: AppTypography.metric(16, color: tokens.primary),
+            ),
+            const SizedBox(width: 4),
+            Text(suffix, style: AppTypography.label(9, color: tokens.textMuted)),
+          ],
+        ),
+        Slider(
+          value: value.toDouble(),
+          min: min.toDouble(),
+          max: max.toDouble(),
+          divisions: divisions ?? (max - min),
+          onChanged: (v) => onChanged(v.round()),
+        ),
+      ],
+    );
+  }
+}
+
 /// Mostra o tamanho do catálogo local e permite sincronizar com o wger.
 class _CatalogCard extends ConsumerStatefulWidget {
   const _CatalogCard();
@@ -445,72 +510,80 @@ class _CatalogCardState extends ConsumerState<_CatalogCard> {
   @override
   Widget build(BuildContext context) {
     final catalog = ref.watch(catalogProvider);
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            catalog.when(
-              loading: () => const Text('Carregando catálogo...'),
-              error: (error, _) => Text('$error'),
-              data: (data) => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${data.totalExercises} exercícios no banco local',
-                    style: theme.textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${data.muscles.length} grupos musculares · ${data.equipment.length} equipamentos · ${data.categories.length} categorias',
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Fonte: wger.de (CC-BY-SA 4.0). Tudo fica salvo localmente, o app funciona sem internet.',
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                  ),
-                ],
-              ),
+    return AppPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          catalog.when(
+            loading: () => const LabelText('Carregando catálogo...', size: 10),
+            error: (error, _) => Text('$error', style: context.texts.bodySmall),
+            data: (data) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      '${data.totalExercises}',
+                      style: AppTypography.metric(24, color: tokens.primary),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'EXERCÍCIOS NO BANCO LOCAL',
+                      style: AppTypography.label(9.5, color: tokens.textSecondary),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${data.muscles.length} grupos musculares · ${data.equipment.length} equipamentos · ${data.categories.length} categorias',
+                  style: context.texts.bodySmall
+                      ?.copyWith(color: tokens.textMuted, fontSize: 12),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Fonte: wger.de (CC-BY-SA 4.0). Tudo salvo localmente — o app funciona sem internet.',
+                  style: context.texts.bodySmall
+                      ?.copyWith(color: tokens.textMuted, fontSize: 11.5),
+                ),
+              ],
             ),
-            const SizedBox(height: 14),
-            OutlinedButton.icon(
-              onPressed: _syncing
-                  ? null
-                  : () async {
-                      setState(() => _syncing = true);
-                      try {
-                        await ref.read(syncRepositoryProvider).sync();
-                        if (context.mounted) {
-                          showAppSnack(
-                            context,
-                            'Sincronização iniciada em background. Pode levar alguns minutos.',
-                          );
-                        }
-                      } catch (error) {
-                        if (context.mounted) {
-                          showAppSnack(context, error.toString(), error: true);
-                        }
-                      } finally {
-                        if (mounted) setState(() => _syncing = false);
+          ),
+          const SizedBox(height: 14),
+          OutlinedButton.icon(
+            onPressed: _syncing
+                ? null
+                : () async {
+                    setState(() => _syncing = true);
+                    try {
+                      await ref.read(syncRepositoryProvider).sync();
+                      if (context.mounted) {
+                        showAppSnack(
+                          context,
+                          'Sincronização iniciada em background. Pode levar alguns minutos.',
+                        );
                       }
-                    },
-              icon: _syncing
-                  ? const SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.sync_rounded),
-              label: const Text('Atualizar catálogo (wger)'),
-            ),
-          ],
-        ),
+                    } catch (error) {
+                      if (context.mounted) {
+                        showAppSnack(context, error.toString(), error: true);
+                      }
+                    } finally {
+                      if (mounted) setState(() => _syncing = false);
+                    }
+                  },
+            icon: _syncing
+                ? SizedBox(
+                    height: 15,
+                    width: 15,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: tokens.primary),
+                  )
+                : const Icon(Icons.sync_rounded, size: 17),
+            label: const Text('Atualizar catálogo (wger)'),
+          ),
+        ],
       ),
     );
   }

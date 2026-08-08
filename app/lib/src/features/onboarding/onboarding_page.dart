@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router.dart';
-import '../../core/theme.dart';
+import '../../theme/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/common.dart';
 
@@ -68,7 +68,6 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Seu perfil'),
@@ -79,23 +78,28 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
-          Container(
+          BrandBanner(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: appGradient(theme.colorScheme),
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                LabelText('Configuração inicial', size: 10, color: context.tokens.onPrimary.withValues(alpha: 0.8)),
+                const SizedBox(height: 8),
                 Text(
-                  'Vamos personalizar seu treino',
-                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+                  'VAMOS CALIBRAR SEU TREINO',
+                  style: AppTypography.display(
+                    size: 19,
+                    weight: FontWeight.w800,
+                    color: context.tokens.onPrimary,
+                  ),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
-                  'Esses dados alimentam suas estatísticas e a evolução do seu treino.',
-                  style: TextStyle(color: Colors.white70, height: 1.35),
+                  'Esses dados alimentam suas estatísticas e a evolução da sua carga.',
+                  style: context.texts.bodySmall?.copyWith(
+                    color: context.tokens.onPrimary.withValues(alpha: 0.78),
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -172,10 +176,13 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           FilledButton.icon(
             onPressed: _saving ? null : _save,
             icon: _saving
-                ? const SizedBox(
+                ? SizedBox(
                     height: 18,
                     width: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      color: context.tokens.onPrimary,
+                    ),
                   )
                 : const Icon(Icons.check_rounded),
             label: const Text('Começar a treinar'),

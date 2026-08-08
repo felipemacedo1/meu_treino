@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/app_providers.dart';
+import '../../theme/theme.dart';
 import '../../widgets/common.dart';
 
 /// Escolha da divisão para montar a ficha automaticamente.
@@ -19,7 +20,7 @@ class SplitPickerSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final splits = ref.watch(splitOptionsProvider);
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
 
     return DraggableScrollableSheet(
       expand: false,
@@ -38,57 +39,43 @@ class SplitPickerSheet extends ConsumerWidget {
           controller: scrollController,
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
           children: [
-            Text('Montar ficha pronta', style: theme.textTheme.titleLarge),
-            const SizedBox(height: 4),
-            Text(
-              'A gente já preenche os exercícios, séries, repetições e descanso. Depois você ajusta tudo.',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            const SectionTitle(
+              'Montar ficha pronta',
+              subtitle: 'Exercícios, séries, repetições e descanso já preenchidos. '
+                  'Depois você ajusta tudo.',
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 6),
             ...options.map(
-              (option) => Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(20),
+              (option) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: AppPanel(
                   onTap: () => Navigator.pop(
                     context,
                     (splitType: option.code, name: 'Treino ${option.name}'),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.zero,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                '${option.dayNames.length}x',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
+                            DayBadge(label: '${option.dayNames.length}x', size: 34),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Text(option.name, style: theme.textTheme.titleSmall),
+                              child: Text(option.name, style: context.texts.titleMedium),
                             ),
-                            const Icon(Icons.chevron_right_rounded),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: tokens.textMuted,
+                              size: 20,
+                            ),
                           ],
                         ),
                         const SizedBox(height: 10),
                         Text(
                           option.description,
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                          style: context.texts.bodySmall?.copyWith(color: tokens.textSecondary),
                         ),
                         const SizedBox(height: 12),
                         Wrap(

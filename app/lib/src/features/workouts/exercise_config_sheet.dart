@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/formatters.dart';
 import '../../models/workout.dart';
+import '../../theme/theme.dart';
 import '../../widgets/common.dart';
 
 /// Ajuste de séries, repetições, carga alvo, descanso e observações.
@@ -61,7 +62,7 @@ class _ExerciseConfigSheetState extends State<ExerciseConfigSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
@@ -70,10 +71,10 @@ class _ExerciseConfigSheetState extends State<ExerciseConfigSheet> {
           children: [
             Row(
               children: [
-                ExerciseImage(url: widget.item.resolvedImageUrl, size: 48, radius: 12),
+                ExerciseImage(url: widget.item.resolvedImageUrl, size: 46),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(widget.item.exerciseName, style: theme.textTheme.titleMedium),
+                  child: Text(widget.item.exerciseName, style: context.texts.titleMedium),
                 ),
               ],
             ),
@@ -84,7 +85,7 @@ class _ExerciseConfigSheetState extends State<ExerciseConfigSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Séries', style: theme.textTheme.labelLarge),
+                      const LabelText('Séries', size: 10),
                       const SizedBox(height: 6),
                       Row(
                         children: [
@@ -96,7 +97,7 @@ class _ExerciseConfigSheetState extends State<ExerciseConfigSheet> {
                             child: Text(
                               '$_sets',
                               textAlign: TextAlign.center,
-                              style: theme.textTheme.titleLarge,
+                              style: AppTypography.metric(24, color: tokens.textPrimary),
                             ),
                           ),
                           IconButton.filledTonal(
@@ -130,7 +131,7 @@ class _ExerciseConfigSheetState extends State<ExerciseConfigSheet> {
               ),
             ),
             const SizedBox(height: 22),
-            Text('Descanso entre séries', style: theme.textTheme.labelLarge),
+            const LabelText('Descanso entre séries', size: 10),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,

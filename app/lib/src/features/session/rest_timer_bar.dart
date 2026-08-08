@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../core/formatters.dart';
+import '../../theme/theme.dart';
+import '../../widgets/common.dart';
 
-/// Cronômetro de descanso entre séries.
+/// Cronômetro de descanso.
+///
+/// É o elemento mais visível do treino: ocupa a base da tela, com dígitos
+/// grandes em Orbitron e brilho na cor da marca. Nos últimos segundos muda
+/// para o tom de alerta, para ser percebido de longe sem precisar ler.
 class RestTimerBar extends StatelessWidget {
   const RestTimerBar({
     super.key,
@@ -23,69 +29,101 @@ class RestTimerBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = context.tokens;
     final progress = total == 0 ? 0.0 : (remaining / total).clamp(0.0, 1.0);
-    final almostDone = remaining <= 5;
+    final ending = remaining <= 5;
+    final tint = ending ? tokens.accent : tokens.primary;
 
-    return Material(
-      color: almostDone ? scheme.tertiary : scheme.primary,
+    return Container(
+      decoration: BoxDecoration(
+        color: tokens.surfaceElevated,
+        border: Border(top: BorderSide(color: tint.withValues(alpha: 0.55), width: 1.4)),
+        boxShadow: AppEffects.glow(tint, strength: 0.24, blur: 26, offset: const Offset(0, -4)),
+      ),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          padding: const EdgeInsets.fromLTRB(16, 12, 12, 10),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 5,
-                  backgroundColor: Colors.white24,
-                  valueColor: const AlwaysStoppedAnimation(Colors.white),
-                ),
-              ),
-              const SizedBox(height: 10),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Icon(Icons.timer_outlined, color: Colors.white, size: 20),
+                  Icon(Icons.timer_outlined, color: tint, size: 20),
                   const SizedBox(width: 10),
-                  Text(
+                  // dígitos grandes e de largura fixa: legíveis de relance e
+                  // sem tremer a cada segundo
+                  MonoDigits(
                     formatClock(remaining),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      fontFeatures: [FontFeature.tabularFigures()],
-                    ),
+                    style: AppTypography.metric(38, color: tint),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14),
                   Expanded(
-                    child: Text(
-                      'Descanso · $label',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white70, fontSize: 12.5),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        LabelText('Descanso', size: 9.5, color: tint),
+                        const SizedBox(height: 2),
+                        Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.texts.bodySmall?.copyWith(
+                            color: tokens.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  IconButton(
-                    tooltip: '-15s',
-                    onPressed: onSubtract,
-                    icon: const Icon(Icons.remove_circle_outline_rounded, color: Colors.white),
-                  ),
-                  IconButton(
-                    tooltip: '+15s',
-                    onPressed: onAdd,
-                    icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white),
-                  ),
+                  _TimerAction(icon: Icons.remove_rounded, onTap: onSubtract, label: '15s'),
+                  const SizedBox(width: 6),
+                  _TimerAction(icon: Icons.add_rounded, onTap: onAdd, label: '15s'),
+                  const SizedBox(width: 6),
                   TextButton(
                     onPressed: onSkip,
-                    style: TextButton.styleFrom(foregroundColor: Colors.white),
+                    style: TextButton.styleFrom(foregroundColor: tint),
                     child: const Text('Pular'),
                   ),
                 ],
               ),
+              const SizedBox(height: 10),
+              ProgressTrack(value: progress, height: 5, color: tint),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TimerAction extends StatelessWidget {
+  const _TimerAction({required this.icon, required this.onTap, required this.label});
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    return Tooltip(
+      message: '${icon == Icons.add_rounded ? '+' : '-'}$label',
+      child: Material(
+        color: tokens.surfaceSunken,
+        borderRadius: AppRadius.all(AppRadius.xs),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppRadius.all(AppRadius.xs),
+          child: Container(
+            height: 36,
+            width: 36,
+            decoration: BoxDecoration(
+              borderRadius: AppRadius.all(AppRadius.xs),
+              border: Border.all(color: tokens.border),
+            ),
+            child: Icon(icon, size: 18, color: tokens.textSecondary),
           ),
         ),
       ),
